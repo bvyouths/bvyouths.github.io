@@ -1,33 +1,18 @@
-# yn-site
-microsite for yn (dev)
-production on yn acc (@bvyouths)
+# bvyn-site
+This is the repository for BV YN website. 
+Built with Github pages.
 
-dev site: its-kenneth.github.io/yn-site
+Disclaimer: 
+- This site is currently undergoing development.
+- Please note that information on the website may be outdated/inaccurate. 
+- For the latest information, please check out IG [@buonavistayn](https://instagram.com/buonavistayn) or Telegram [@bvyouths](https://go.gov.sg/bvyntele)
+- For enquries, please contact us at youths[at]bv.sg 
 
-prod site: xxx.github.io (to be created)
+## For developers
+Changes should be made in `dev` branch. 
 
-separating dev and prod to prevent crashing prod when there are future changes to live site (by merging this repo into yn-owned repo)
-
-also to have the domain xxyn.github.io
-
-mvp target:
-- homepage with
-    - 1 Header
-    - 2 What we do 
-    - 1 Future events (CTA: signup)
-    - 2 Join tele channel | Volunteer w us (CTA)
-    - 1 IG embed
-    - 1 Footer
-
-suggested improvements
-- edit behold to only incl posts with #bvyouths, modify feed as well
-- remake header img (canva 1200x400 & jpg it, replace)
-
-future improvements:
-- add events page (past events)
-
-note:
-- for behold, collab posts (posted by someone else) dont appear
-
-run site: 
-- python3 -m http.server 4000
+Prior to merging to main,
+1. Test changes locally: 
+    - python3 -m http.server
+2. Create pull request (merge dev to main)
+3. Merge once approved
