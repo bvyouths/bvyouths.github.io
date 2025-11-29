@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Buona Vista Youth Network</title>
+    <link rel="icon" href="https://github.com/bvyouths/bvyouths.github.io/blob/main/assets/favicon.png?raw=true">
+
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <style>
+        h2 {
+            text-align: center;
+            margin-top: 40px;
+            margin-bottom: 30px;
+        }
+
+        /* UPCOMING EVENTS CARDS */
+        .events {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin: 40px 0;
+        }
+
+        .event-card {
+            flex: 1;
+            max-width: 250px;
+            height: 440px; /* standard card height */
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        /* Image wrapper for padding and rounded corners */
+        .event-card .img-wrapper {
+            padding: 8px;           /* space around image */
+            border-radius: 12px;    /* round corners of wrapper */
+            background-color: #fff;
+        }
+
+        /* Inner crop container to enforce 1:1 aspect ratio */
+        .event-card .img-crop {
+            width: 100%;
+            aspect-ratio: 1 / 1;    /* square */
+            overflow: hidden;
+            border-radius: 8px;     /* round the image itself */
+        }
+
+        /* Image inside crop container */
+        .event-card .img-crop img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;       /* crop image to fill 1:1 */
+            display: block;
+            cursor: pointer;
+        }
+
+        .event-card h3 {
+            height: 3em; /* fixed height for 2 rows */
+            display: flex;
+            align-items: center; /* vertical center */
+            justify-content: center;
+            margin: 5px 10px;
+            font-size: 1.2rem;
+            color: #333;
+            text-align: center;
+            line-height: 1.5em;
+        }
+
+        .event-card .description {
+            flex: 1;
+            display: flex;
+            align-items: center; /* vertical center if short */
+            justify-content: center;
+            padding: 0 10px;
+            font-size: 0.95rem;
+            color: #555;
+            text-align: center;
+            height: 6em; /* allocate 4 rows */
+            line-height: 1.5em;
+        }
+
+        .event-card a.button {
+            margin: 10px;
+            padding: 10px 15px;
+            background-color: #0077ff;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            display: inline-block;
+            align-self: center;
+        }
+
+        .event-card a.button:hover {
+            background-color: #005bb5;
+        }
+
+        /* INSTAGRAM FEED */
+        .ig-feed h2 {
+            text-align: center;
+            margin-top: 40px;
+            margin-bottom: 30px;
+            font-size: 1.5rem;
+        }
+
+        .ig-feed h2 a {
+            color: #0077ff;
+            text-decoration: none;
+        }
+
+        /* DIVIDER */
+        hr.divider {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin: 50px 0;
+        }
+
+        /* HEADER IMAGE */
+        header img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 12px;
+        }
+
+        /* FOOTER */
+        footer {
+            max-width: 900px;
+            margin: 40px auto 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            padding: 20px 0;
+            border-top: 1px solid #ddd;
+            color: #555;
+        }
+
+        footer a {
+            color: #0077ff;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 725px) {
+            .events {
+                flex-direction: column;
+                gap: 30px;
+                align-items: center;
+            }
+
+            footer {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <div class="container">
+            <img src="assets/header.jpg" alt="Buona Vista Youth Network Header" class="header-image">
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+
+        <!-- UPCOMING EVENTS -->
+        <h2>Upcoming Events</h2>
+        <div class="events">
+            <!-- Add up to 3 event cards -->
+            <div class="event-card">
+                <a href="https://go.gov.sg/bvwineappr2025">
+                    <div class="img-wrapper">
+                        <div class="img-crop">
+                            <img src="img/sq1.jpg" alt="Event 1">
+                        </div>
+                    </div>
+                </a>
+                <h3>Wine Appreciation</h3>
+                <div class="description">Join us for an afternoon of wine tasting and networking</div>
+                <a href="https://go.gov.sg/bvwineappr2025" class="button">Sign up</a>
+            </div>
+
+            <div class="event-card">
+                <a href="https://go.gov.sg/bvyntele">
+                    <div class="img-wrapper">
+                        <div class="img-crop">
+                            <img src="img/telegram.jpg" alt="Telegram Channel">
+                        </div>
+                    </div>
+                </a>
+                <h3>Join our Telegram</h3>
+                <div class="description">Be notified of all our latest events and programmes!</div>
+                <a href="https://go.gov.sg/bvyntele" class="button">Subscribe</a>
+            </div>
+
+        </div>
+
+        <!-- LINE DIVIDER -->
+        <hr class="divider">
+
+        <!-- LATEST FROM INSTAGRAM -->
+        <div class="ig-feed">
+            <h2>Latest from <a href="https://www.instagram.com/buonavistayn" target="_blank">@buonavistayn</a></h2>
+
+            <behold-widget feed-id="vvHDE2kvnr6zSzXTzNoO"></behold-widget>
+            <script>
+                (() => {
+                    const d=document,s=d.createElement("script");
+                    s.type="module";
+                    s.src="https://w.behold.so/widget.js";
+                    d.head.append(s);
+                })();
+            </script>
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <span>© Buona Vista Youth Network 2025</span>
+        <a href="https://www.instagram.com/buonavistayn" target="_blank">IG: @buonavistayn</a>
+    </footer>
+
+</body>
+</html>
