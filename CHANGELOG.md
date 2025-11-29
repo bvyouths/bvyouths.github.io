@@ -3,8 +3,6 @@
 ## Overview
 This page tracks the changes made to the website. It provides a log of updates, bug fixes, and new features.
 
-Current Version: **v0.1 (unreleased, mvp 1)**
-
 ## Change Log
 ### 29 November 2025
 - **v0.1.3:** Bug fix: Favicon
