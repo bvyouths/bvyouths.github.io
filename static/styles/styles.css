@@ -180,7 +180,7 @@ h2 em, h1 em { font-style: normal; color: var(--orange); }
   gap: 26px;
   margin-top: 36px;
 }
-.hero .text-link:hover { color: var(--gold); }
+.hero .text-link:hover, .page-hero .text-link:hover { color: var(--gold); }
 
 /* Illustration */
 .hero-art {
@@ -617,3 +617,8 @@ a.event-card:hover .event-cta { background: var(--orange); color: #fff; }
 
 /* icon sizing */
 .contact-list .icon svg { width: 20px; height: 20px; }
+
+/* ---------- Header / footer placeholders (shown for a split second while partials load) ---------- */
+.include-header { height: 84px; background: var(--purple); }
+.include-footer { min-height: 220px; background: var(--purple-deep); }
+@media (max-width: 800px) { .include-header { height: 74px; } }

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex">
+        <title>Page not found — Buona Vista Youth Network</title>
+        <!-- Paths start with "/" because this page can be shown at any URL (e.g. /events/old-link) -->
+        <link rel="icon" type="image/png" href="/static/images/favicon.png">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="/static/styles/styles.css">
+    </head>
+    <body>
+        <!-- Header: edit partials/header.html -->
+        <div class="include-header" data-include="/partials/header.html"></div>
+
+        <main>
+            <section class="page-hero section-pad">
+                <p class="eyebrow"><span class="pulse light"></span> Error 404</p>
+                <h1>This page<br><em>wandered off.</em></h1>
+                <p class="hero-intro">The link might be old, or the address might have a typo. Let’s get you back somewhere real.</p>
+                <div class="hero-actions">
+                    <a class="button button-gold" href="/">Back to home <span>↗</span></a>
+                    <a class="text-link" href="/events">See upcoming events <span>↗</span></a>
+                </div>
+                <div class="blob" aria-hidden="true"></div>
+            </section>
+        </main>
+
+        <!-- Footer: edit partials/footer.html -->
+        <div class="include-footer" data-include="/partials/footer.html"></div>
+        <script src="/static/scripts/script.js"></script>
+    </body>
+</html>
