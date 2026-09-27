@@ -12,20 +12,8 @@
         <link rel="stylesheet" href="static/styles/styles.css">
     </head>
     <body>
-        <header class="site-header">
-            <a class="brand" href="index.html" aria-label="Buona Vista Youth Network home">
-                <img src="static/images/logo.png" alt="" width="52" height="45">
-                <span>BUONA VISTA<br>YOUTH NETWORK</span>
-            </a>
-            <nav class="nav-links" id="site-nav" aria-label="Main navigation">
-                <a href="about.html">About us</a>
-                <a href="events.html">Events</a>
-                <a href="collaborate.html">Collaborate</a>
-                <a class="mobile-only" href="collaborate.html#join">Get involved ↗</a>
-            </nav>
-            <a class="header-cta" href="collaborate.html#join">Get involved <span>↗</span></a>
-            <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
-        </header>
+        <!-- Header: edit partials/header.html -->
+        <div class="include-header" data-include="partials/header.html"></div>
 
         <main id="top">
             <section class="hero section-pad">
@@ -34,8 +22,8 @@
                     <h1>Small steps.<span>Big ripples.</span></h1>
                     <p class="hero-intro">We bring 15–35 year old youths together to serve the community, build connections and turn fresh ideas into action.</p>
                     <div class="hero-actions">
-                        <a class="button button-gold" href="events.html">See what’s happening <span>↗</span></a>
-                        <a class="text-link" href="about.html">Our story <span>↗</span></a>
+                        <a class="button button-gold" href="/events">See what’s happening <span>↗</span></a>
+                        <a class="text-link" href="/about">Our story <span>↗</span></a>
                     </div>
                 </div>
                 <div class="hero-art" role="img" aria-label="Illustration of people connecting across a community">
@@ -62,7 +50,7 @@
                     <h2>We believe<br>in <em>showing up.</em></h2>
                     <div class="about-body">
                         <p>We are the youth representative grassroots body serving residents in Buona Vista Constituency. We create the space, spark the conversation and make it easier to turn good ideas into action.</p>
-                        <a class="text-link" href="about.html">Meet the network <span>↗</span></a>
+                        <a class="text-link" href="/about">Meet the network <span>↗</span></a>
                     </div>
                 </div>
                 <div class="principles">
@@ -88,10 +76,10 @@
                 <div class="section-label"><span>02</span><span>What’s on</span></div>
                 <div class="events-heading">
                     <h2>Come as you are.<br><em>Leave inspired.</em></h2>
-                    <a class="text-link" href="events.html">View all events <span>↗</span></a>
+                    <a class="text-link" href="/events">View all events <span>↗</span></a>
                 </div>
-                <!-- Loaded live from Google Sheets (static/scripts/events.js). data-max = number shown -->
-                <div class="event-list" data-events data-max="3" aria-live="polite"></div>
+                <!-- Loaded live from Google Sheets (static/scripts/events.js). shows all upcoming events -->
+                <div class="event-list" data-events aria-live="polite"></div>
             </section>
 
             <section class="collaborate section-pad">
@@ -100,8 +88,8 @@
                     <h2>Let’s make<br><em>some noise.</em></h2>
                     <p>Whether you’re an individual, a community group or an organisation — we’d love to hear what you’re working on.</p>
                     <div class="collab-actions">
-                        <a class="button button-gold" href="collaborate.html">Collaborate with us <span>↗</span></a>
-                        <a class="button button-outline" href="collaborate.html#join">Join the network <span>↗</span></a>
+                        <a class="button button-gold" href="/collaborate">Collaborate with us <span>↗</span></a>
+                        <a class="button button-outline" href="/collaborate#join">Join the network <span>↗</span></a>
                     </div>
                 </div>
                 <div class="collab-doodle" aria-hidden="true"><img src="static/images/logo.png" alt=""></div>
@@ -119,27 +107,8 @@
             </section>
         </main>
 
-        <footer class="site-footer">
-            <div>
-                <div class="footer-brand">
-                    <img src="static/images/logo.png" alt="" width="56" height="48">
-                    <span>BUONA VISTA<br>YOUTH NETWORK</span>
-                </div>
-                <p style="margin-top:18px">Built by young people,<br>for a more connected community.</p>
-            </div>
-            <nav class="footer-links" aria-label="Footer">
-                <a href="about.html">About us</a>
-                <a href="events.html">Events</a>
-                <a href="collaborate.html">Collaborate</a>
-                <a href="collaborate.html#join">Join us</a>
-            </nav>
-            <div class="socials">
-                <a href="https://www.instagram.com/buonavistayn/" target="_blank" rel="noopener" aria-label="Instagram @buonavistayn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"/></svg></a>
-                <a href="https://t.me/bvyouths" target="_blank" rel="noopener" aria-label="Telegram @bvyouths"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2L6.5 13.2l-4.7-1.5c-1-.3-1-1 .2-1.5l18.5-7.1c.9-.3 1.6.2 1.4 1.2z"/></svg></a>
-                <a href="mailto:youths@bv.sg" aria-label="Email youths@bv.sg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></a>
-            </div>
-            <small>© <span data-year>2026</span> Buona Vista Youth Network · c/o Buona Vista Community Club</small>
-        </footer>
+        <!-- Footer: edit partials/footer.html -->
+        <div class="include-footer" data-include="partials/footer.html"></div>
         <script src="static/scripts/script.js"></script>
         <script src="static/scripts/events.js"></script>
     </body>
