@@ -289,23 +289,13 @@ h2 em, h1 em { font-style: normal; color: var(--orange); }
   transition: background .2s, padding .2s, margin .2s;
 }
 a.event-card:hover { background: rgba(242, 175, 36, .18); margin: 0 -25px; padding: 30px 25px; }
-.event-card.featured,
-a.event-card.featured:hover {
-  background: var(--gold);
-  margin: 0 -25px;
-  padding: 30px 25px;
-  border-bottom-color: transparent;
-  border-radius: 0 0 22px 22px;
-}
 .date { display: flex; align-items: center; gap: 12px; }
 .date b { font-size: 50px; letter-spacing: -.07em; line-height: 1; }
 .date span { font: 500 11px 'DM Mono', monospace; line-height: 1.35; }
 .date .date-text { font-size: 13px; text-transform: uppercase; }
 .event-type { margin: 0 0 12px; font-size: 10px; color: var(--orange); font-weight: 500; }
-.featured .event-type { color: var(--purple); }
 .event-card h3 { font-size: 27px; line-height: 1.05; letter-spacing: -.045em; margin: 0; }
 .event-desc { font-size: 14px; line-height: 1.55; margin: 12px 0 0; max-width: 560px; color: var(--muted); }
-.featured .event-desc { color: var(--purple); }
 .event-cta {
   display: inline-flex;
   align-items: center;
@@ -320,7 +310,6 @@ a.event-card.featured:hover {
   transition: background .2s, color .2s;
 }
 a.event-card:hover .event-cta { background: var(--orange); color: #fff; }
-.featured .event-cta { background: var(--purple); }
 .event-status { padding: 34px 0; font-size: 15px; color: var(--muted); margin: 0; }
 .event-status a { font-weight: 800; border-bottom: 2px solid currentColor; }
 .skeleton {
@@ -595,7 +584,7 @@ a.event-card:hover .event-cta { background: var(--orange); color: #fff; }
   .events-heading h2 { margin-bottom: 20px; }
   .events-heading .text-link { display: inline-block; margin-bottom: 36px; }
   .event-card { grid-template-columns: 1fr; gap: 14px; padding: 26px 0; }
-  .event-card.featured, a.event-card.featured:hover, a.event-card:hover { margin: 0 -6vw; padding: 26px 6vw; border-radius: 0; }
+  a.event-card:hover { margin: 0 -6vw; padding: 26px 6vw; border-radius: 0; }
   .date b { font-size: 38px; }
   .date span br { display: none; }
   .event-card h3 { font-size: 22px; }

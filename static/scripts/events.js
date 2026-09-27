@@ -41,9 +41,9 @@
         list.appendChild(p);
     }
 
-    function buildCard(ev, featured) {
+    function buildCard(ev) {
         var link = cleanLink(ev.link);
-        var card = el(link ? 'a' : 'article', 'event-card' + (featured ? ' featured' : ''));
+        var card = el(link ? 'a' : 'article', 'event-card');
         if (link) {
             card.href = link;
             if (!/^mailto:/i.test(link)) {
@@ -100,7 +100,7 @@
                     return;
                 }
                 list.innerHTML = '';
-                events.forEach(function (ev, i) { list.appendChild(buildCard(ev, i === 0)); });
+                events.forEach(function (ev) { list.appendChild(buildCard(ev)); });
             });
         })
         .catch(function (err) {
