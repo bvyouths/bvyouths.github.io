@@ -254,9 +254,11 @@ h2 em, h1 em { font-style: normal; color: var(--orange); }
 @keyframes slide { to { transform: translateX(-100%); } }
 
 /* ---------- About (home) ---------- */
-.about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8vw; }
+.about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8vw; margin-bottom: 56px; }
+.about-grid h2 { margin-bottom: 0; }
 .about-body { max-width: 430px; padding-top: 52px; font-size: 16px; line-height: 1.7; }
-.about-body .text-link { display: inline-block; margin-top: 22px; }
+.about-body p { margin: 0; }
+.about-body .text-link { display: inline-block; margin-top: 20px; }
 .principles {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
