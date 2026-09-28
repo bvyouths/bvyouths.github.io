@@ -319,6 +319,96 @@ a.event-card:hover .event-cta { background: var(--orange); color: #fff; }
   animation: shimmer 1.2s infinite;
 }
 @keyframes shimmer { from { background-position: -40% 0; } to { background-position: 140% 0; } }
+[hidden] { display: none !important; }
+
+/* ---------- Event posters (A4, details on hover / tap) ---------- */
+.poster-carousel { --per-view: 3; --gap: 24px; position: relative; margin-bottom: 70px; }
+.poster-track {
+  display: flex;
+  gap: var(--gap);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.poster-track::-webkit-scrollbar { display: none; }
+/* Centre the posters when there are fewer than fit on screen */
+.poster:first-child { margin-left: auto; }
+.poster:last-child { margin-right: auto; }
+.poster {
+  flex: 0 0 min(calc((100% - (var(--per-view) - 1) * var(--gap)) / var(--per-view)), 420px);
+  aspect-ratio: 210 / 297;
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  background: var(--purple);
+  scroll-snap-align: start;
+  cursor: pointer;
+}
+.poster:focus-visible { outline: 3px solid var(--gold); outline-offset: -3px; }
+.poster img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+.poster-info {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 28px;
+  overflow-y: auto;
+  background: rgba(29, 0, 94, .93);
+  color: var(--cream);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .25s, visibility .25s;
+}
+.poster.is-open .poster-info,
+.poster:focus-visible .poster-info,
+.poster:has(a:focus-visible) .poster-info,
+.poster.no-image .poster-info { opacity: 1; visibility: visible; }
+@media (hover: hover) {
+  .poster:hover .poster-info { opacity: 1; visibility: visible; }
+  .poster:hover img { transform: scale(1.04); }
+}
+.poster.no-image img { display: none; }
+.poster-info .date { color: var(--gold); margin-bottom: 18px; }
+.poster-info .event-type { color: var(--gold-soft); margin-bottom: 8px; }
+.poster-info h3 { font-size: 26px; line-height: 1.05; letter-spacing: -.045em; margin: 0; }
+.poster-info .event-desc { color: var(--cream); opacity: .85; }
+.poster-info .event-cta { align-self: flex-start; margin-top: 20px; background: var(--gold); color: var(--purple); }
+.poster-info .event-cta:hover { background: var(--orange); color: #fff; }
+.poster-arrow {
+  display: none;
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--purple);
+  color: var(--cream);
+  font: 700 28px/1 Manrope, Arial, sans-serif;
+  cursor: pointer;
+  transform: translateY(-50%);
+  box-shadow: 0 8px 20px rgba(29, 0, 94, .25);
+  transition: background .2s, opacity .2s;
+}
+.poster-arrow:hover:not(:disabled) { background: var(--orange); }
+.poster-arrow:disabled { opacity: .3; cursor: default; }
+.poster-arrow-prev { left: -24px; }
+.poster-arrow-next { right: -24px; }
+.poster-carousel.has-overflow .poster-arrow { display: grid; }
+
+/* ---------- Past events (image and text alternate sides) ---------- */
+.past-list { display: grid; gap: 90px; }
+.past-event { display: grid; grid-template-columns: 1fr 1fr; gap: 6vw; align-items: center; }
+.past-event:nth-child(even) .past-media { order: 2; }
+.past-media { aspect-ratio: 4 / 3; border-radius: 22px; overflow: hidden; background: var(--sand); }
+.past-media img { width: 100%; height: 100%; object-fit: cover; }
+.past-media.no-image { background: var(--gold-soft) url(/static/images/logo.png) center / 28% no-repeat; }
+.past-body h3 { font-size: clamp(28px, 3.4vw, 44px); line-height: 1; letter-spacing: -.05em; margin: 0 0 14px; }
+.past-date { font: 500 13px 'DM Mono', monospace; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 18px; }
+.past-body .event-desc { font-size: 16px; line-height: 1.65; margin: 0; }
 
 /* ---------- Collaborate band ---------- */
 .collaborate {
@@ -545,6 +635,7 @@ a.event-card:hover .event-cta { background: var(--orange); color: #fff; }
   .collab-doodle { width: 200px; right: -30px; opacity: .25; }
   .ways, .roles { grid-template-columns: 1fr; }
   .pillar-block { grid-template-columns: 1fr; gap: 20px; }
+  .poster-carousel { --per-view: 2; }
 }
 
 @media (max-width: 800px) {
@@ -589,6 +680,13 @@ a.event-card:hover .event-cta { background: var(--orange); color: #fff; }
   .date span br { display: none; }
   .event-card h3 { font-size: 22px; }
   .event-cta { justify-self: start; }
+  .poster-carousel { --per-view: 1; --gap: 16px; margin-bottom: 50px; }
+  .poster-arrow { width: 40px; height: 40px; font-size: 24px; }
+  .poster-arrow-prev { left: -14px; }
+  .poster-arrow-next { right: -14px; }
+  .past-list { gap: 60px; }
+  .past-event { grid-template-columns: 1fr; gap: 24px; }
+  .past-event:nth-child(even) .past-media { order: 0; }
   .collab-doodle { display: none; }
   .page-hero { padding-bottom: 120px; }
   .page-hero .blob { width: 170px; height: 170px; right: -50px; bottom: -80px; }
