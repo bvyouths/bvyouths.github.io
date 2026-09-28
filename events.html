@@ -34,8 +34,17 @@
                     <h2>Save the <em>date.</em></h2>
                     <a class="text-link" href="/collaborate#join">Volunteer at an event <span>↗</span></a>
                 </div>
-                <!-- Loaded live from Google Sheets (static/scripts/events.js). Shows all upcoming events -->
+                <!-- Loaded live from Google Sheets (static/scripts/events.js).
+                     Posters: upcoming events that have a Poster link. List: all upcoming events -->
+                <div class="poster-carousel" data-event-posters></div>
                 <div class="event-list" data-events aria-live="polite"></div>
+            </section>
+
+            <!-- Loaded from the "Past events" tab. Stays hidden if the tab is empty -->
+            <section class="past-events section-pad" data-past-section hidden>
+                <div class="section-label"><span>02</span><span>Past events</span></div>
+                <h2>Where we’ve <em>been.</em></h2>
+                <div class="past-list" data-past-events></div>
             </section>
 
             <section class="collaborate section-pad">
