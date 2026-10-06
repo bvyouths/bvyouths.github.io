@@ -7,6 +7,8 @@
      data-max = how many events to show (leave out to show all)
    Upcoming event posters (only events with a Poster link):
      <div class="poster-carousel" data-event-posters></div>
+     Add data-placeholder to show every event, using a branded card when there's no poster:
+     <div class="poster-carousel" data-event-posters data-placeholder></div>
    Past events (from the "Past events" tab):
      <section data-past-section hidden> … <div class="past-list" data-past-events></div> </section>
      The data-past-section stays hidden unless there are past events to show.
@@ -25,7 +27,8 @@
         return node;
     }
 
-    function getJSON(url) {
+    // Apps Script occasionally returns a one-off error, so try once more before giving up
+    function getJSON(url, retried) {
         return fetch(url)
             .then(function (res) {
                 if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -34,6 +37,10 @@
             .then(function (data) {
                 if (data.error) throw new Error(data.error);
                 return data.events || [];
+            })
+            .catch(function (err) {
+                if (retried) throw err;
+                return new Promise(function (r) { setTimeout(r, 800); }).then(function () { return getJSON(url, true); });
             });
     }
 
@@ -68,6 +75,11 @@
         list.appendChild(p);
     }
 
+    // "6.30pm to 9.30pm · Leng Kee CC · $5/pax"
+    function metaLine(ev) {
+        return [ev.time, ev.location, ev.price].filter(Boolean).join(' · ');
+    }
+
     function buildDate(ev) {
         var date = el('div', 'date');
         if (ev.day) {
@@ -93,9 +105,9 @@
 
         card.appendChild(buildDate(ev));
 
-        // Details: Type · Location, name, description
+        // Details: Time · Location · Price, name, description
         var details = el('div');
-        var meta = [ev.type, ev.location].filter(Boolean).join(' · ');
+        var meta = metaLine(ev);
         if (meta) details.appendChild(el('p', 'event-type', meta));
         details.appendChild(el('h3', '', ev.name));
         if (ev.description) details.appendChild(el('p', 'event-desc', ev.description));
@@ -112,17 +124,33 @@
         poster.tabIndex = 0;
         poster.setAttribute('aria-label', ev.name);
 
-        var img = el('img');
-        img.src = ev.poster;
-        img.alt = 'Poster for ' + ev.name;
-        img.loading = 'lazy';
-        img.addEventListener('error', function () { poster.classList.add('no-image'); });
-        poster.appendChild(img);
+        // No poster (or it fails to load): branded card with the date and name
+        function addCover() {
+            poster.classList.add('placeholder');
+            var cover = el('div', 'poster-cover');
+            var logo = el('img', 'poster-logo');
+            logo.src = '/static/images/logo.png';
+            logo.alt = '';
+            cover.appendChild(logo);
+            cover.appendChild(buildDate(ev));
+            cover.appendChild(el('h3', '', ev.name));
+            poster.insertBefore(cover, poster.firstChild);
+        }
+        if (ev.poster) {
+            var img = el('img');
+            img.src = ev.poster;
+            img.alt = 'Poster for ' + ev.name;
+            img.loading = 'lazy';
+            img.addEventListener('error', function () { img.remove(); addCover(); });
+            poster.appendChild(img);
+        } else {
+            addCover();
+        }
 
         // Details shown on hover / focus / tap
         var info = el('div', 'poster-info');
         info.appendChild(buildDate(ev));
-        var meta = [ev.type, ev.location].filter(Boolean).join(' · ');
+        var meta = metaLine(ev);
         if (meta) info.appendChild(el('p', 'event-type', meta));
         info.appendChild(el('h3', '', ev.name));
         if (ev.description) info.appendChild(el('p', 'event-desc', ev.description));
@@ -214,6 +242,9 @@
             list.innerHTML = '';
             for (var i = 0; i < 2; i++) list.appendChild(el('div', 'skeleton'));
         });
+        carousels.forEach(function (carousel) {
+            if (carousel.hasAttribute('data-placeholder')) carousel.appendChild(el('div', 'skeleton'));
+        });
 
         getJSON(EVENTS_API_URL)
             .then(function (all) {
@@ -230,8 +261,14 @@
 
                 var withPosters = all.filter(function (ev) { return ev.poster; });
                 carousels.forEach(function (carousel) {
-                    if (withPosters.length) setUpCarousel(carousel, withPosters);
-                    else carousel.hidden = true;
+                    if (carousel.hasAttribute('data-placeholder')) {
+                        if (all.length) setUpCarousel(carousel, all);
+                        else showStatus(carousel, 'No upcoming events just yet — new ones are on the way.', true);
+                    } else if (withPosters.length) {
+                        setUpCarousel(carousel, withPosters);
+                    } else {
+                        carousel.hidden = true;
+                    }
                 });
             })
             .catch(function (err) {
@@ -239,7 +276,13 @@
                 lists.forEach(function (list) {
                     showStatus(list, 'We couldn’t load events right now. For the latest, check our Instagram.', true);
                 });
-                carousels.forEach(function (carousel) { carousel.hidden = true; });
+                carousels.forEach(function (carousel) {
+                    if (carousel.hasAttribute('data-placeholder')) {
+                        showStatus(carousel, 'We couldn’t load events right now. For the latest, check our Instagram.', true);
+                    } else {
+                        carousel.hidden = true;
+                    }
+                });
             });
     }
 

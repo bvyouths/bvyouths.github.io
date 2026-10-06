@@ -3,8 +3,8 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="description" content="Buona Vista Youth Network — a youth-led grassroots body focused on advocacy, cohesion and empowerment.">
-        <title>Buona Vista Youth Network — Youth in motion</title>
+        <meta name="description" content="Buona Vista Youth Network — youth representative grassroots body in Buona Vista">
+        <title>Buona Vista Youth Network</title>
         <link rel="icon" type="image/png" href="static/images/favicon.png">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,25 +18,12 @@
         <main id="top">
             <section class="hero section-pad">
                 <div class="hero-copy">
-                    <p class="eyebrow"><span class="pulse light"></span> Youth advocacy · cohesion · empowerment</p>
-                    <h1>Small steps.<span>Big ripples.</span></h1>
-                    <p class="hero-intro">We bring 15–35 year old youths together to serve the community, build connections and turn fresh ideas into action.</p>
-                    <div class="hero-actions">
-                        <a class="button button-gold" href="/events">See what’s happening <span>↗</span></a>
-                        <a class="text-link" href="/about">Our story <span>↗</span></a>
-                    </div>
+                    <h1>BUONA VISTA<br>YOUTH NETWORK</h1>
+                    <p class="hero-intro">the youth representative grassroots body serving<br class="br-wide"> residents in Buona Vista Constituency.</p>
                 </div>
-                <div class="hero-art" role="img" aria-label="Illustration of people connecting across a community">
-                    <div class="sun"></div>
-                    <div class="orbit orbit-one"></div>
-                    <div class="orbit orbit-two"></div>
-                    <div class="spark spark-a">✦</div>
-                    <div class="spark spark-b">✦</div>
-                    <div class="person person-one"><i></i><b></b><strong></strong></div>
-                    <div class="person person-two"><i></i><b></b><strong></strong></div>
-                    <div class="person person-three"><i></i><b></b><strong></strong></div>
-                    <div class="hero-sticker">made<br>together <span>♥</span></div>
-                </div>
+                <figure class="hero-photo">
+                    <img src="static/images/photos/committee-selfie.jpg" alt="Buona Vista Youth Network committee members at a community event" width="1600" height="1200">
+                </figure>
             </section>
         <div class="ticker" aria-hidden="true">
             <span>MEET <b>✦</b> MAKE <b>✦</b> MOVE <b>✦</b> ADVOCACY <b>✦</b> COHESION <b>✦</b> EMPOWERMENT <b>✦</b>&nbsp;</span>
@@ -78,21 +65,9 @@
                     <h2>Come as you are.<br><em>Leave inspired.</em></h2>
                     <a class="text-link" href="/events">View all events <span>↗</span></a>
                 </div>
-                <!-- Loaded live from Google Sheets (static/scripts/events.js). shows all upcoming events -->
-                <div class="event-list" data-events aria-live="polite"></div>
-            </section>
-
-            <section class="collaborate section-pad">
-                <div class="collab-inner">
-                    <p class="eyebrow"><span class="pulse light"></span> Have an idea?</p>
-                    <h2>Let’s make<br><em>some noise.</em></h2>
-                    <p>Whether you’re an individual, a community group or an organisation — we’d love to hear what you’re working on.</p>
-                    <div class="collab-actions">
-                        <a class="button button-gold" href="/collaborate">Collaborate with us <span>↗</span></a>
-                        <a class="button button-outline" href="/collaborate#join">Join the network <span>↗</span></a>
-                    </div>
-                </div>
-                <div class="collab-doodle" aria-hidden="true"><img src="static/images/logo.png" alt=""></div>
+                <!-- Loaded live from Google Sheets (static/scripts/events.js).
+                     All upcoming events as poster cards; events without a poster get a branded placeholder card -->
+                <div class="poster-carousel" data-event-posters data-placeholder aria-live="polite"></div>
             </section>
 
             <section class="instagram section-pad">

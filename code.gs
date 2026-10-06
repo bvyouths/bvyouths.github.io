@@ -8,7 +8,7 @@
  *
  * Columns (row 1 headers, any order). Missing tabs / columns are created automatically
  * the first time the API runs — or run setUpSheets() from the editor to create them now.
- *   Upcoming events: Date | Type | Location | Event Name | Description | Link | Poster
+ *   Upcoming events: Date | Time | Location | Price | Event Name | Description | Link | Poster
  *   Past events:     Hero Image | Event Name | Event Date | Event Type | Event Description
  *
  * Upcoming events
@@ -17,6 +17,9 @@
  * Past events
  * - Sorted most recent first. Rows whose date can't be understood are shown at the end.
  *
+ * New columns are formatted as plain text, so entries like "6.30pm to 9.30pm" or "$5/pax"
+ * are shown exactly as typed. (A leftover "Type" column in Upcoming events is simply ignored.)
+ *
  * Poster / Hero Image: paste an image link. Google Drive links work if the file is shared
  * as "Anyone with the link". Posters should be A4 portrait.
  */
@@ -24,7 +27,7 @@
 const TABS = {
   upcoming: {
     name: 'Upcoming events',
-    headers: ['Date', 'Type', 'Location', 'Event Name', 'Description', 'Link', 'Poster']
+    headers: ['Date', 'Time', 'Location', 'Price', 'Event Name', 'Description', 'Link', 'Poster']
   },
   past: {
     name: 'Past events',
@@ -32,7 +35,7 @@ const TABS = {
   }
 };
 const CACHE_SECONDS = 300; // sheet edits show on the site within 5 minutes
-const CACHE_KEY = 'events_v3'; // change this to clear the cache after editing the script
+const CACHE_KEY = 'events_v4'; // change this to clear the cache after editing the script
 
 const MONTHS_SHORT = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 const MONTHS_FULL = ['january', 'february', 'march', 'april', 'may', 'june', 'july',
@@ -91,6 +94,10 @@ function ensureSheets_() {
       let start = have.length;
       while (start > 0 && !have[start - 1]) start--;
       sheet.getRange(1, start + 1, 1, missing.length).setValues([missing]).setFontWeight('bold');
+      // Plain text, so times / prices / dates aren't auto-converted by Sheets
+      if (sheet.getMaxRows() > 1) {
+        sheet.getRange(2, start + 1, sheet.getMaxRows() - 1, missing.length).setNumberFormat('@');
+      }
       sheet.setFrozenRows(1);
     });
   } finally {
@@ -149,8 +156,9 @@ function today_() {
 function getUpcomingEvents_() {
   const rows = readTab_(TABS.upcoming.name, {
     date: 'date',
-    type: 'type',
+    time: 'time',
     location: 'location',
+    price: 'price',
     name: 'event name',
     description: 'description',
     link: 'link',
@@ -173,8 +181,9 @@ function getUpcomingEvents_() {
       month: parsed ? MONTHS_SHORT[parsed.month - 1] : '',
       year: parsed ? String(parsed.year) : '',
       sortKey: parsed ? parsed.key : 99999999,
-      type: row.text('type'),
+      time: row.text('time'),
       location: row.text('location'),
+      price: row.text('price'),
       name: name,
       description: row.text('description'),
       link: row.link('link'),
