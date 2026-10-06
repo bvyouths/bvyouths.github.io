@@ -32,8 +32,9 @@ function markCurrentPage() {
         .split('/').pop().replace(/^index$/, '');
     const page = normalise(window.location.pathname);
     document.querySelectorAll('.nav-links a').forEach((a) => {
-        const href = normalise(a.getAttribute('href') || '');
-        if (href === page && !a.classList.contains('mobile-only')) {
+        const raw = a.getAttribute('href') || '';
+        // Section links like "/collaborate#join" don't count as the page itself
+        if (normalise(raw) === page && raw.indexOf('#') === -1) {
             a.setAttribute('aria-current', 'page');
         }
     });
@@ -48,12 +49,12 @@ function setUpMenu() {
     const close = () => {
         header.classList.remove('nav-open');
         toggle.setAttribute('aria-expanded', 'false');
-        toggle.textContent = 'Menu';
+        toggle.setAttribute('aria-label', 'Open menu');
     };
     toggle.addEventListener('click', () => {
         const open = header.classList.toggle('nav-open');
         toggle.setAttribute('aria-expanded', open);
-        toggle.textContent = open ? 'Close' : 'Menu';
+        toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
     });
     header.querySelectorAll('.nav-links a').forEach((a) => a.addEventListener('click', close));
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
