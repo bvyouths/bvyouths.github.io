@@ -1,41 +1,74 @@
 /**
- * Buona Vista Youth Network — Events API
+ * Buona Vista Youth Network — Website API
  *
- * Serves the event tabs as JSON so the GitHub Pages site can fetch them.
- *   .../exec             → "Upcoming events" tab
- *   .../exec?type=past   → "Past events" tab
+ * Serves the sheet's tabs as JSON so the GitHub Pages site can fetch them.
+ *   .../exec                          → "Upcoming events"
+ *   .../exec?type=past                → "Past events"
+ *   .../exec?type=gallery             → "Gallery"
+ *   .../exec?type=committee           → "Committee" (shown members only, for the /committee grid)
+ *   .../exec?type=member&name=jane-tan → one shown member's profile (/member?name=jane-tan)
  *   add &nocache=1 (or ?nocache=1) to skip the 5-minute cache after editing the sheet
  *
  * Columns (row 1 headers, any order). Missing tabs / columns are created automatically
  * the first time the API runs — or run setUpSheets() from the editor to create them now.
- *   Upcoming events: Date | Time | Location | Price | Event Name | Description | Link | Poster
- *   Past events:     Hero Image | Event Name | Event Date | Event Type | Event Description
+ *   Upcoming events: Date | Time | Location | Price | Event Name | Description | Link | Poster | Type
+ *   Past events:     Hero Image | Event Name | Event Date | Event Type | Event Description | Project Ref
+ *   Projects:        Project Ref | Project Name
+ *   Gallery:         Image | Event Name | Description | Label | Persons | Project Ref
+ *   Committee:       Name | Username | Position | Image | Bio | Projects | Featured | Show
  *
  * Upcoming events
  * - Past dates are hidden automatically (dates compared in the script's time zone).
  * - Sorted soonest first. Rows whose date can't be understood are shown at the end.
- * Past events
- * - Sorted most recent first. Rows whose date can't be understood are shown at the end.
+ * - Type isn't displayed; "Volunteering Opportunity" adds a tag on the event's card.
+ * Past events, Gallery
+ * - Shown newest first = bottom row first. Event Date is free text (e.g. "Quarterly",
+ *   "Mar – Jul 2026"), so it is never used for sorting.
+ * - Project Refs should be unique in Past events. If one repeats, the bottom row wins.
+ * Committee
+ * - Only rows with the Show checkbox ticked appear anywhere (grid, profile, photo tags).
+ *   Hidden members' details never leave the sheet.
+ * - Username is tidied to lower case with hyphens for spaces ("Jane Tan" → jane-tan).
+ *   If two rows share one, the first row wins.
+ * - Projects / Featured / Persons are multi-select dropdowns: comma-separated refs/usernames.
+ *   Only the first 2 Featured refs are used.
+ * - Gallery's Persons column is never sent to the website; it only picks each member's
+ *   4 latest photos.
  *
- * New columns are formatted as plain text, so entries like "6.30pm to 9.30pm" or "$5/pax"
- * are shown exactly as typed. (A leftover "Type" column in Upcoming events is simply ignored.)
+ * New columns are formatted as plain text (the Show column gets checkboxes), so entries
+ * like "6.30pm to 9.30pm" or "$5/pax" are shown exactly as typed.
  *
- * Poster / Hero Image: paste an image link. Google Drive links work if the file is shared
- * as "Anyone with the link". Posters should be A4 portrait.
+ * Images: paste an image link. Google Drive links work if the file is shared as
+ * "Anyone with the link". Posters A4 portrait, hero images 4:3, committee photos square.
  */
 
 const TABS = {
   upcoming: {
     name: 'Upcoming events',
-    headers: ['Date', 'Time', 'Location', 'Price', 'Event Name', 'Description', 'Link', 'Poster']
+    headers: ['Date', 'Time', 'Location', 'Price', 'Event Name', 'Description', 'Link', 'Poster', 'Type']
   },
   past: {
     name: 'Past events',
-    headers: ['Hero Image', 'Event Name', 'Event Date', 'Event Type', 'Event Description']
+    headers: ['Hero Image', 'Event Name', 'Event Date', 'Event Type', 'Event Description', 'Project Ref']
+  },
+  projects: {
+    name: 'Projects',
+    headers: ['Project Ref', 'Project Name']
+  },
+  gallery: {
+    name: 'Gallery',
+    headers: ['Image', 'Event Name', 'Description', 'Label', 'Persons', 'Project Ref']
+  },
+  committee: {
+    name: 'Committee',
+    headers: ['Name', 'Username', 'Position', 'Image', 'Bio', 'Projects', 'Featured', 'Show']
   }
 };
+const CHECKBOX_HEADERS = ['show'];
 const CACHE_SECONDS = 300; // sheet edits show on the site within 5 minutes
-const CACHE_KEY = 'events_v4'; // change this to clear the cache after editing the script
+const CACHE_KEY = 'site_v5'; // change this to clear the cache after editing the script
+const MAX_FEATURED = 2;
+const MAX_MEMBER_PHOTOS = 4;
 
 const MONTHS_SHORT = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 const MONTHS_FULL = ['january', 'february', 'march', 'april', 'may', 'june', 'july',
@@ -43,8 +76,9 @@ const MONTHS_FULL = ['january', 'february', 'march', 'april', 'may', 'june', 'ju
 
 function doGet(e) {
   const params = (e && e.parameter) || {};
-  const type = params.type === 'past' ? 'past' : 'upcoming';
-  const cacheKey = CACHE_KEY + '_' + type;
+  const type = ['past', 'gallery', 'committee', 'member'].indexOf(params.type) !== -1 ? params.type : 'upcoming';
+  const username = type === 'member' ? slug_(params.name) : '';
+  const cacheKey = CACHE_KEY + '_' + type + (username ? '_' + username : '');
   let body;
   try {
     const cache = CacheService.getScriptCache();
@@ -52,14 +86,18 @@ function doGet(e) {
 
     if (!body) {
       ensureSheets_();
-      body = JSON.stringify({
-        events: type === 'past' ? getPastEvents_() : getUpcomingEvents_(),
-        updated: new Date().toISOString()
-      });
+      let data;
+      if (type === 'past') data = { events: getPastEvents_() };
+      else if (type === 'gallery') data = { photos: getGallery_() };
+      else if (type === 'committee') data = { members: getCommittee_() };
+      else if (type === 'member') data = { member: getMember_(username) }; // null = not found / hidden
+      else data = { events: getUpcomingEvents_() };
+      data.updated = new Date().toISOString();
+      body = JSON.stringify(data);
       cache.put(cacheKey, body, CACHE_SECONDS);
     }
   } catch (err) {
-    body = JSON.stringify({ error: String(err && err.message ? err.message : err), events: [] });
+    body = JSON.stringify({ error: String(err && err.message ? err.message : err) });
   }
 
   return ContentService
@@ -73,7 +111,7 @@ function setUpSheets() {
 }
 
 /**
- * Makes sure both tabs exist with all their column headers.
+ * Makes sure every tab exists with all its column headers.
  * Existing tabs keep their data; any missing headers are added after the last column.
  */
 function ensureSheets_() {
@@ -94,9 +132,16 @@ function ensureSheets_() {
       let start = have.length;
       while (start > 0 && !have[start - 1]) start--;
       sheet.getRange(1, start + 1, 1, missing.length).setValues([missing]).setFontWeight('bold');
-      // Plain text, so times / prices / dates aren't auto-converted by Sheets
       if (sheet.getMaxRows() > 1) {
-        sheet.getRange(2, start + 1, sheet.getMaxRows() - 1, missing.length).setNumberFormat('@');
+        missing.forEach(function (header, i) {
+          const column = sheet.getRange(2, start + 1 + i, sheet.getMaxRows() - 1, 1);
+          if (CHECKBOX_HEADERS.indexOf(header.toLowerCase()) !== -1) {
+            column.setDataValidation(SpreadsheetApp.newDataValidation().requireCheckbox().build());
+          } else {
+            // Plain text, so times / prices / dates aren't auto-converted by Sheets
+            column.setNumberFormat('@');
+          }
+        });
       }
       sheet.setFrozenRows(1);
     });
@@ -108,6 +153,7 @@ function ensureSheets_() {
 /**
  * Reads a tab and returns helpers for each data row:
  *   text(key)  → the cell as displayed
+ *   list(key)  → a comma-separated cell as an array of tidied refs / usernames
  *   link(key)  → a usable URL from the cell (see findLink_)
  *   image(key) → a URL that can go straight into <img src> (see findImage_)
  * `columns` maps our keys to header names (lower case).
@@ -132,8 +178,10 @@ function readTab_(tabName, columns) {
   return values.slice(1).map(function (row, i) {
     const r = i + 1; // position in values / richText / formulas
     const has = function (key) { return idx[key] !== undefined && idx[key] !== -1; };
+    const text = function (key) { return has(key) ? String(row[idx[key]] || '').trim() : ''; };
     return {
-      text: function (key) { return has(key) ? String(row[idx[key]] || '').trim() : ''; },
+      text: text,
+      list: function (key) { return text(key).split(',').map(slug_).filter(Boolean); },
       link: function (key) {
         return has(key) ? findLink_(row[idx[key]], richText[r][idx[key]], formulas[r][idx[key]]) : '';
       },
@@ -142,6 +190,11 @@ function readTab_(tabName, columns) {
       }
     };
   });
+}
+
+/** Tidies a username or ref for matching: "  Jane Tan " → "jane-tan". */
+function slug_(value) {
+  return String(value || '').trim().toLowerCase().replace(/\s+/g, '-');
 }
 
 function today_() {
@@ -162,7 +215,8 @@ function getUpcomingEvents_() {
     name: 'event name',
     description: 'description',
     link: 'link',
-    poster: 'poster'
+    poster: 'poster',
+    type: 'type'
   });
   const today = today_();
   const events = [];
@@ -187,7 +241,8 @@ function getUpcomingEvents_() {
       name: name,
       description: row.text('description'),
       link: row.link('link'),
-      poster: row.image('poster')
+      poster: row.image('poster'),
+      type: row.text('type')
     });
   });
 
@@ -195,37 +250,157 @@ function getUpcomingEvents_() {
   return events;
 }
 
+/** Past events, newest first (bottom row first). */
 function getPastEvents_() {
   const rows = readTab_(TABS.past.name, {
     image: 'hero image',
     name: 'event name',
     date: 'event date',
     type: 'event type',
-    description: 'event description'
+    description: 'event description',
+    projectRef: 'project ref'
   });
-  const today = today_();
   const events = [];
 
   rows.forEach(function (row) {
     const name = row.text('name');
     if (!name) return; // skip blank rows
-
-    const dateText = row.text('date');
-    // todayKey 0: a date without a year is taken as this year, not next year.
-    const parsed = parseDate_(dateText, today.year, 0);
-
     events.push({
-      dateText: dateText,
-      sortKey: parsed ? parsed.key : 0,
+      dateText: row.text('date'),
       type: row.text('type'),
       name: name,
       description: row.text('description'),
-      image: row.image('image')
+      image: row.image('image'),
+      projectRef: slug_(row.text('projectRef'))
     });
   });
 
-  events.sort(function (a, b) { return b.sortKey - a.sortKey; });
-  return events;
+  return events.reverse();
+}
+
+/** Past events by Project Ref. If a ref repeats, the bottom row wins. */
+function pastEventsByRef_() {
+  const byRef = {};
+  getPastEvents_().slice().reverse().forEach(function (ev) {
+    if (ev.projectRef) byRef[ev.projectRef] = ev;
+  });
+  return byRef;
+}
+
+/** Gallery rows with an image, newest first (bottom row first). `persons` is internal only. */
+function readGallery_() {
+  const rows = readTab_(TABS.gallery.name, {
+    image: 'image',
+    name: 'event name',
+    description: 'description',
+    label: 'label',
+    persons: 'persons',
+    projectRef: 'project ref'
+  });
+  const photos = [];
+  rows.forEach(function (row) {
+    const image = row.image('image');
+    if (!image) return; // rows without an image are skipped
+    photos.push({
+      image: image,
+      name: row.text('name'),
+      description: row.text('description'),
+      label: row.text('label'),
+      projectRef: slug_(row.text('projectRef')),
+      persons: row.list('persons')
+    });
+  });
+  return photos.reverse();
+}
+
+/** What /gallery shows — without Persons, so who is tagged isn't public. */
+function getGallery_() {
+  return readGallery_().map(function (p) {
+    return { image: p.image, name: p.name, description: p.description, label: p.label, projectRef: p.projectRef };
+  });
+}
+
+/** Committee rows with Name and Username, Show ticked, one row per username (first wins). */
+function readCommittee_() {
+  const rows = readTab_(TABS.committee.name, {
+    name: 'name',
+    username: 'username',
+    position: 'position',
+    image: 'image',
+    bio: 'bio',
+    projects: 'projects',
+    featured: 'featured',
+    show: 'show'
+  });
+  const seen = {};
+  const members = [];
+  rows.forEach(function (row) {
+    const name = row.text('name');
+    const username = slug_(row.text('username'));
+    if (!name || !username || seen[username]) return;
+    seen[username] = true; // a later duplicate never replaces the first row, even if this one is hidden
+    if (['true', 'yes'].indexOf(row.text('show').toLowerCase()) === -1) return;
+    members.push({
+      name: name,
+      username: username,
+      position: row.text('position'),
+      image: row.image('image'),
+      bio: row.text('bio'),
+      projects: row.list('projects'),
+      featured: row.list('featured')
+    });
+  });
+  return members;
+}
+
+/** The /committee grid: shown members in sheet order. */
+function getCommittee_() {
+  return readCommittee_().map(function (m) {
+    return { name: m.name, username: m.username, position: m.position, image: m.image };
+  });
+}
+
+/** One shown member's profile, or null if the username is unknown or hidden. */
+function getMember_(username) {
+  if (!username) return null;
+  const member = readCommittee_().filter(function (m) { return m.username === username; })[0];
+  if (!member) return null;
+
+  const pastByRef = pastEventsByRef_();
+
+  const projectNames = {};
+  readTab_(TABS.projects.name, { ref: 'project ref', name: 'project name' }).forEach(function (row) {
+    const ref = slug_(row.text('ref'));
+    if (ref && !projectNames[ref]) projectNames[ref] = row.text('name');
+  });
+
+  const projects = member.projects.map(function (ref) {
+    return {
+      ref: ref,
+      name: projectNames[ref] || ref,
+      link: pastByRef[ref] ? '/events#' + ref : ''
+    };
+  });
+
+  const featured = member.featured.slice(0, MAX_FEATURED)
+    .map(function (ref) { return pastByRef[ref]; })
+    .filter(Boolean);
+
+  const photos = readGallery_()
+    .filter(function (p) { return p.persons.indexOf(username) !== -1; })
+    .slice(0, MAX_MEMBER_PHOTOS)
+    .map(function (p) { return { image: p.image, name: p.name, description: p.description, label: p.label }; });
+
+  return {
+    name: member.name,
+    username: member.username,
+    position: member.position,
+    image: member.image,
+    bio: member.bio,
+    projects: projects,
+    featured: featured,
+    photos: photos
+  };
 }
 
 /**

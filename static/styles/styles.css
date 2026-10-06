@@ -295,16 +295,19 @@ a.event-card:hover .event-cta { background: var(--orange); color: #fff; }
 @keyframes shimmer { from { background-position: -40% 0; } to { background-position: 140% 0; } }
 [hidden] { display: none !important; }
 
-/* ---------- Event posters (A4, details on hover / tap) ---------- */
-.poster-carousel { --per-view: 3; --gap: 24px; position: relative; margin-bottom: 70px; }
-.poster-track {
+/* ---------- Sliders with ‹ › arrows (posters, profile photos, featured) — built by api.js ---------- */
+.carousel { position: relative; }
+.carousel-track {
   display: flex;
-  gap: var(--gap);
+  gap: var(--gap, 24px);
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
 }
-.poster-track::-webkit-scrollbar { display: none; }
+.carousel-track::-webkit-scrollbar { display: none; }
+
+/* ---------- Event posters (A4, details on hover / tap) ---------- */
+.poster-carousel { --per-view: 3; --gap: 24px; margin-bottom: 70px; }
 /* Centre the posters when there are fewer than fit on screen */
 .poster:first-child { margin-left: auto; }
 .poster:last-child { margin-right: auto; }
@@ -341,6 +344,22 @@ a.event-card:hover .event-cta { background: var(--orange); color: #fff; }
   .poster:hover .poster-info { opacity: 1; visibility: visible; }
   .poster:hover img { transform: scale(1.04); }
 }
+/* "Volunteering Opportunity" tag: corner of the poster until the details show; beside the name in the list */
+.poster-tag, .event-tag {
+  font: 500 10px/1.2 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  background: var(--orange);
+  color: #fff;
+  border-radius: 30px;
+  padding: 6px 10px;
+}
+.poster-tag { position: absolute; top: 14px; right: 14px; z-index: 1; max-width: calc(100% - 28px); transition: opacity .2s; }
+.poster.is-open .poster-tag,
+.poster:focus-visible .poster-tag,
+.poster:has(a:focus-visible) .poster-tag { opacity: 0; }
+@media (hover: hover) { .poster:hover .poster-tag { opacity: 0; } }
+.event-tag { display: inline-block; vertical-align: middle; margin-left: 12px; letter-spacing: .04em; }
 /* Branded card for events without a poster */
 .poster.placeholder { background: var(--purple); color: var(--cream); }
 .poster-cover {
@@ -371,7 +390,7 @@ a.event-card:hover .event-cta { background: var(--orange); color: #fff; }
 .poster-info .event-desc { color: var(--cream); opacity: .85; }
 .poster-info .event-cta { align-self: flex-start; margin-top: 20px; background: var(--gold); color: var(--purple); }
 .poster-info .event-cta:hover { background: var(--orange); color: #fff; }
-.poster-arrow {
+.carousel-arrow {
   display: none;
   position: absolute;
   top: 50%;
@@ -389,11 +408,11 @@ a.event-card:hover .event-cta { background: var(--orange); color: #fff; }
   box-shadow: 0 8px 20px rgba(29, 0, 94, .25);
   transition: background .2s, opacity .2s;
 }
-.poster-arrow:hover:not(:disabled) { background: var(--orange); }
-.poster-arrow:disabled { opacity: .3; cursor: default; }
-.poster-arrow-prev { left: -24px; }
-.poster-arrow-next { right: -24px; }
-.poster-carousel.has-overflow .poster-arrow { display: grid; }
+.carousel-arrow:hover:not(:disabled) { background: var(--orange); }
+.carousel-arrow:disabled { opacity: .3; cursor: default; }
+.carousel-arrow-prev { left: -24px; }
+.carousel-arrow-next { right: -24px; }
+.carousel.has-overflow > .carousel-arrow { display: grid; }
 
 /* ---------- Past events (image and text alternate sides) ---------- */
 .past-list { display: grid; gap: 90px; }
@@ -593,13 +612,120 @@ a.event-card:hover .event-cta { background: var(--orange); color: #fff; }
 .address { font-size: 15px; line-height: 1.7; color: var(--muted); }
 .address strong { color: var(--purple); display: block; font-size: 17px; margin-bottom: 4px; }
 
-/* ---------- Committee (/committee) ---------- */
+/* ---------- Committee (/committee) — cards built by committee.js ---------- */
 .member-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px 28px; }
-.member img { width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; border-radius: 22px; background: var(--sand); }
-.member h3 { font-size: 20px; letter-spacing: -.03em; margin: 16px 0 4px; }
+.member-grid > .event-status { grid-column: 1 / -1; }
+.member { display: block; }
+.member-photo { aspect-ratio: 1; border-radius: 22px; overflow: hidden; background: var(--sand); }
+.member-photo img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+a.member:hover .member-photo img { transform: scale(1.04); }
+a.member:hover h3 { color: var(--orange); }
+.member h3 { font-size: 20px; letter-spacing: -.03em; margin: 16px 0 4px; transition: color .2s; }
+.member-skeleton {
+  aspect-ratio: 1;
+  border-radius: 22px;
+  background: var(--sand) linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent) 0 0 / 40% 100% no-repeat;
+  animation: shimmer 1.2s infinite;
+}
+/* No photo: purple square with gold initials (committee cards and profiles) */
+.avatar-initials { display: grid; place-items: center; background: var(--purple); color: var(--gold); }
+.avatar-initials span { font-size: clamp(32px, 4.5vw, 56px); font-weight: 800; letter-spacing: -.04em; }
 .member p { margin: 0; font: 500 12px 'DM Mono', monospace; text-transform: uppercase; letter-spacing: .06em; color: var(--orange); }
 @media (max-width: 960px) { .member-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 700px) { .member-grid { grid-template-columns: repeat(2, 1fr); gap: 28px 16px; } .member h3 { font-size: 17px; } }
+
+/* ---------- Gallery (/gallery) — masonry built by gallery.js ---------- */
+.gallery { display: flex; gap: 20px; align-items: flex-start; }
+.gallery-column { flex: 1; min-width: 0; display: grid; gap: 20px; }
+.gallery-item { position: relative; margin: 0; overflow: hidden; border-radius: 18px; background: var(--sand); cursor: pointer; }
+.gallery-item:focus-visible { outline: 3px solid var(--gold); outline-offset: -3px; }
+.gallery-item img { width: 100%; height: auto; transition: transform .4s; }
+.gallery-info {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 24px;
+  overflow-y: auto;
+  background: linear-gradient(to top, rgba(29, 0, 94, .94), rgba(29, 0, 94, .6) 55%, rgba(29, 0, 94, .2));
+  color: var(--cream);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .25s, visibility .25s;
+}
+.gallery-info .event-type { color: var(--gold-soft); margin: 0 0 6px; }
+.gallery-info h3 { font-size: 22px; line-height: 1.1; letter-spacing: -.03em; margin: 0; }
+.gallery-info .event-desc { color: var(--cream); opacity: .85; margin: 8px 0 0; }
+.gallery-item.is-open .gallery-info,
+.gallery-item:focus-visible .gallery-info { opacity: 1; visibility: visible; }
+@media (hover: hover) {
+  .gallery-item { cursor: zoom-in; }
+  .gallery-item:hover .gallery-info { opacity: 1; visibility: visible; }
+  .gallery-item:hover img { transform: scale(1.03); }
+}
+/* Enlarged photo (laptop) */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 6vh 6vw;
+  background: rgba(15, 0, 50, .92);
+  cursor: zoom-out;
+}
+.lightbox.is-open { display: flex; }
+.lightbox img { max-width: 100%; max-height: 80vh; width: auto; height: auto; border-radius: 12px; cursor: default; }
+.lightbox-caption { margin: 0; color: var(--cream); font: 500 13px 'DM Mono', monospace; text-transform: uppercase; letter-spacing: .06em; text-align: center; }
+.lightbox-close {
+  position: absolute;
+  top: 20px; right: 24px;
+  width: 44px; height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .14);
+  color: var(--cream);
+  font-size: 18px;
+  cursor: pointer;
+}
+.lightbox-close:hover { background: var(--orange); }
+.no-scroll { overflow: hidden; }
+
+/* ---------- Member profile (/member?name=…) — built by member.js ---------- */
+.profile-hero { padding-bottom: 90px; }
+.back-link { display: inline-block; margin-bottom: 36px; font-size: 13px; font-weight: 800; color: var(--gold-soft); }
+.back-link:hover { color: var(--gold); }
+.profile-intro { display: grid; grid-template-columns: minmax(180px, 280px) minmax(0, 1fr); gap: 5vw; align-items: center; }
+.profile-photo { aspect-ratio: 1; border-radius: 28px; overflow: hidden; border: 6px solid var(--gold); background: var(--purple-deep); }
+.profile-photo img { width: 100%; height: 100%; object-fit: cover; }
+.profile-photo.avatar-initials span { font-size: clamp(48px, 7vw, 88px); }
+.profile-text h1 { margin: 0 0 12px; overflow-wrap: anywhere; }
+.profile-position { margin: 0 0 22px; font: 500 13px 'DM Mono', monospace; text-transform: uppercase; letter-spacing: .08em; color: var(--gold); }
+.profile-bio { max-width: 560px; margin: 0; font-size: 17px; line-height: 1.7; opacity: .92; }
+.profile-loading { margin: 0; }
+.profile-section .section-label { margin-bottom: 40px; }
+.profile-section + .profile-section { padding-top: 0; }
+.profile-projects { margin: 0; }
+.chip-link { text-decoration: underline; text-underline-offset: 3px; transition: background .2s, color .2s; }
+.chip-link:hover { background: var(--orange); color: #fff; }
+/* Photos: 4 across on laptop, 2 on tablet, 1 at a time with arrows on phone (4:3) */
+.photo-carousel { --per-view: 4; --gap: 18px; }
+.photo {
+  flex: 0 0 calc((100% - (var(--per-view) - 1) * var(--gap)) / var(--per-view));
+  margin: 0;
+  aspect-ratio: 4 / 3;
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--sand);
+  scroll-snap-align: start;
+}
+.photo img { width: 100%; height: 100%; object-fit: cover; }
+/* Featured: alternating rows on laptop (like Past events), 1 at a time with arrows on phone */
+.featured-track { display: grid; gap: 90px; overflow: visible; }
 
 /* ---------- Footer ---------- */
 .site-footer {
@@ -643,6 +769,7 @@ a.event-card:hover .event-cta { background: var(--orange); color: #fff; }
   .ways, .roles { grid-template-columns: 1fr; }
   .pillar-block { grid-template-columns: 1fr; gap: 20px; }
   .poster-carousel { --per-view: 2; }
+  .photo-carousel { --per-view: 2; }
 }
 
 @media (max-width: 800px) {
@@ -683,12 +810,21 @@ a.event-card:hover .event-cta { background: var(--orange); color: #fff; }
   .event-card h3 { font-size: 22px; }
   .event-cta { justify-self: start; }
   .poster-carousel { --per-view: 1; --gap: 16px; margin-bottom: 50px; }
-  .poster-arrow { width: 40px; height: 40px; font-size: 24px; }
-  .poster-arrow-prev { left: -14px; }
-  .poster-arrow-next { right: -14px; }
+  .carousel-arrow { width: 40px; height: 40px; font-size: 24px; }
+  .carousel-arrow-prev { left: -14px; }
+  .carousel-arrow-next { right: -14px; }
   .past-list { gap: 60px; }
   .past-event { grid-template-columns: 1fr; gap: 24px; }
   .past-event:nth-child(even) .past-media { order: 0; }
+  .photo-carousel { --per-view: 1; --gap: 16px; }
+  .featured-carousel { --gap: 16px; }
+  .featured-track { display: flex; gap: var(--gap); overflow-x: auto; }
+  .featured-track .past-event { flex: 0 0 100%; scroll-snap-align: start; }
+  .featured-carousel .carousel-arrow { top: 33vw; } /* middle of the 4:3 image, not the whole card */
+  .profile-hero { padding-bottom: 70px; }
+  .profile-intro { grid-template-columns: 1fr; gap: 28px; }
+  .profile-photo { max-width: 320px; width: 100%; }
+  .gallery, .gallery-column { gap: 16px; }
   .collab-doodle { display: none; }
   .page-hero { padding-bottom: 120px; }
   .page-hero .blob { width: 170px; height: 170px; right: -50px; bottom: -80px; }
