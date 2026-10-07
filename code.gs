@@ -7,6 +7,9 @@
  *   .../exec?type=gallery             → "Gallery"
  *   .../exec?type=committee           → "Committee" (shown members only, for the /committee grid)
  *   .../exec?type=member&name=jane-tan → one shown member's profile (/member?name=jane-tan)
+ *
+ * Line breaks typed in a cell (Ctrl/Cmd+Enter) are kept and shown as new lines on the site
+ * for descriptions and bios.
  *   add &nocache=1 (or ?nocache=1) to skip the 5-minute cache after editing the sheet
  *
  * Columns (row 1 headers, any order). Missing tabs / columns are created automatically
@@ -33,7 +36,7 @@
  * - Projects / Featured / Persons are multi-select dropdowns: comma-separated refs/usernames.
  *   Only the first 2 Featured refs are used.
  * - Gallery's Persons column is never sent to the website; it only picks each member's
- *   4 latest photos.
+ *   10 latest photos.
  *
  * New columns are formatted as plain text (the Show column gets checkboxes), so entries
  * like "6.30pm to 9.30pm" or "$5/pax" are shown exactly as typed.
@@ -66,9 +69,9 @@ const TABS = {
 };
 const CHECKBOX_HEADERS = ['show'];
 const CACHE_SECONDS = 300; // sheet edits show on the site within 5 minutes
-const CACHE_KEY = 'site_v5'; // change this to clear the cache after editing the script
+const CACHE_KEY = 'site_v6'; // change this to clear the cache after editing the script
 const MAX_FEATURED = 2;
-const MAX_MEMBER_PHOTOS = 4;
+const MAX_MEMBER_PHOTOS = 10;
 
 const MONTHS_SHORT = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 const MONTHS_FULL = ['january', 'february', 'march', 'april', 'may', 'june', 'july',

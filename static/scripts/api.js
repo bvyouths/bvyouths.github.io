@@ -137,10 +137,15 @@ window.BVYN = (function () {
         container.appendChild(track);
         container.appendChild(next);
 
-        function step() {
-            var first = track.firstElementChild;
-            var gap = parseFloat(getComputedStyle(track).columnGap) || 0;
-            return first ? first.offsetWidth + gap : track.clientWidth;
+        // Distance to the start of the next (or previous) item, so items of different widths work too
+        function step(dir) {
+            var start = track.getBoundingClientRect().left;
+            var items = Array.prototype.slice.call(track.children);
+            var offsets = items.map(function (item) { return item.getBoundingClientRect().left - start; });
+            var target = dir > 0
+                ? offsets.filter(function (x) { return x > 5; })[0]
+                : offsets.filter(function (x) { return x < -5; }).pop();
+            return target === undefined ? dir * track.clientWidth : target;
         }
         function update() {
             var overflow = track.scrollWidth - track.clientWidth > 2;
@@ -148,10 +153,12 @@ window.BVYN = (function () {
             prev.disabled = track.scrollLeft <= 2;
             next.disabled = track.scrollLeft >= track.scrollWidth - track.clientWidth - 2;
         }
-        prev.addEventListener('click', function () { track.scrollBy({ left: -step(), behavior: 'smooth' }); });
-        next.addEventListener('click', function () { track.scrollBy({ left: step(), behavior: 'smooth' }); });
+        prev.addEventListener('click', function () { track.scrollBy({ left: step(-1), behavior: 'smooth' }); });
+        next.addEventListener('click', function () { track.scrollBy({ left: step(1), behavior: 'smooth' }); });
         track.addEventListener('scroll', update, { passive: true });
         window.addEventListener('resize', update);
+        // Images that size themselves (e.g. profile photos) change the row's width once loaded
+        track.querySelectorAll('img').forEach(function (img) { img.addEventListener('load', update); });
         update();
         return track;
     }

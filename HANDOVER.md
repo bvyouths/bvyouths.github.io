@@ -1,6 +1,6 @@
 # Buona Vista Youth Network website: handover
 
-Last updated: 7 Oct 2026
+Last updated: 8 Oct 2026
 
 This note is for whoever maintains the website next. It covers how the site is built, how events, the gallery and the committee are managed through Google Sheets, the decisions we made and why, and the usual tasks.
 
@@ -27,8 +27,8 @@ This note is for whoever maintains the website next. It covers how the site is b
 ├── about.html            About us
 ├── events.html           Events: poster carousel, upcoming list, past events
 ├── collaborate.html      Collaborate: ways to work together, #join form, #contact
-├── gallery.html          Hidden page (/gallery): photo gallery from the sheet. Not in the menu, noindex
-├── committee.html        Hidden page (/committee): committee grid from the sheet. Not in the menu, noindex
+├── gallery.html          /gallery: photo gallery from the sheet. In the menu and footer; noindex
+├── committee.html        /committee: committee grid from the sheet. In the footer and linked from About; noindex
 ├── member.html           Hidden page (/member?name=<username>): one member's profile. noindex
 ├── 404.html              "Page not found" page (GitHub Pages shows it automatically)
 ├── CNAME                 Custom domain for GitHub Pages (bvyouths.com). Don't delete
@@ -67,7 +67,8 @@ Defined as CSS variables at the top of `static/styles/styles.css`: `--purple #2c
 ## 3. URLs and links
 
 - **Internal links don't use `.html`:** `/about`, `/events`, `/collaborate`, and `/` for home. The `#join` and `#contact` sections are linked as `/collaborate#join` and `/collaborate#contact`. GitHub Pages maps `/about` to `about.html` automatically.
-- **Hidden pages:** `/gallery`, `/committee` and `/member?name=<username>` aren't in the menu and are marked `noindex`.
+- **Menu:** About us · Events · Gallery · Collaborate · Join us. **Footer:** About us · Committee · Events · Gallery · Collaborate · Join us.
+- **`noindex`:** `/gallery`, `/committee` and `/member` ask Google not to list them (kept on request while the committee decides about going public). `/committee` is linked from About ("Check out the faces behind BV YN") and the footer; profiles are reached from the committee cards.
 - **Project links:** each past event with a Project Ref gets that ref as its id, so `/events#2026-hlw` scrolls to it (after the events load). Profiles link projects this way.
 - `script.js` → `markCurrentPage()` highlights the current menu item. It treats `/events`, `/events.html` and `/events/` as the same page.
 - **Paths in `404.html` and `member.html` start with `/`** (`/static/...`, `/partials/...`) so they work at any depth.
@@ -95,7 +96,7 @@ https://script.google.com/macros/s/AKfycbyZ_Sp_VuXyBVqNtekwKcshiGuwXohG6PH-J7k9g
 | `…/exec?type=past` | Past events, newest first, with `projectRef` |
 | `…/exec?type=gallery` | Gallery photos, newest first (no Persons) |
 | `…/exec?type=committee` | Shown members only: name, username, position, image |
-| `…/exec?type=member&name=jane-tan` | One shown member: details, projects, up to 2 featured past events, up to 4 latest photos. `"member": null` if unknown or hidden |
+| `…/exec?type=member&name=jane-tan` | One shown member: details, projects, up to 2 featured past events, up to 10 latest photos. `"member": null` if unknown or hidden |
 | add `nocache=1` | Reads the sheet fresh and refreshes the cache (see below) |
 
 ### Sheet tabs and columns
@@ -103,7 +104,8 @@ Row 1 must hold the headers. They can be in any order, and capitals and extra sp
 
 **`Upcoming events`**: `Date | Time | Location | Price | Event Name | Description | Link | Poster | Type`
 - **Time** and **Price** are plain text, shown exactly as typed on one line: `Time · Location · Price` (e.g. `6.30pm to 9.30pm · Leng Kee CC · $5/pax`).
-- **Type** isn't displayed. If it's `Volunteering Opportunity` (any capitals/spacing), the event's poster card gets an orange **Volunteering Opportunity** tag in the top-right corner (hidden while the details show) and the list row gets the same tag beside the name.
+- **Type** isn't displayed. If it's `Volunteering Opportunity` (any capitals/spacing), the event's poster card (or brand card) gets an orange **Volunteering Opportunity** tag in the top-right corner, which stays visible while the details show, and the list row gets the same tag beside the name.
+- **Line breaks:** a new line typed inside a cell (Ctrl/Cmd+Enter) shows as a new line on the site in Description, Event Description, Gallery Description and Bio.
 - Events whose date has passed are hidden automatically. They are sorted soonest first.
 - **Date** accepts `18 Oct 2026`, `18 October 2026`, `Sat, 18th Oct 2026`, `Oct 18, 2026`, `18/10/2026` (day first), `2026-10-18`, and `18 Oct` (year assumed). Dates it can't read still show, at the end, as the raw text.
 - **Link** is the sign-up link. It can be a plain URL, a link behind text, `=HYPERLINK(...)`, or an email.
@@ -120,7 +122,7 @@ Row 1 must hold the headers. They can be in any order, and capitals and extra sp
 **`Gallery`**: `Image | Event Name | Description | Label | Persons | Project Ref`
 - Rows without an image are skipped. Name, description and label are each optional (shown on hover/tap). Label is free text, e.g. the date.
 - **Shown newest first = bottom row first.** Add new photos at the bottom.
-- **Persons**: multi-select dropdown of committee **usernames**. Never sent to the website as-is; the script only uses it to pick each member's 4 latest photos for their profile.
+- **Persons**: multi-select dropdown of committee **usernames**. Never sent to the website as-is; the script only uses it to pick each member's 10 latest photos for their profile.
 - **Project Ref**: dropdown from `Projects`. Stored for future use; not displayed yet.
 
 **`Committee`**: `Name | Username | Position | Image | Bio | Projects | Featured | Show`
@@ -148,9 +150,9 @@ Select the column's cells (e.g. Committee → Projects, row 2 down) → **Data �
 - Paste a link to the image. Google Drive links (`drive.google.com/file/d/…/view`, `open?id=…`) are converted automatically. **The file must be shared as "Anyone with the link".** `=IMAGE("url")` and links behind text also work.
 - Images **inserted into or over cells** (Insert → Image) are **not** picked up. Use a link.
 - **Posters:** A4 portrait, e.g. **1240 × 1754 px**.
-- **Past event hero images / profile photos strip:** 4:3 landscape, **1600 × 1200 px**. Cropped to fill, so keep faces and text away from the edges.
+- **Past event hero images:** 4:3 landscape, **1600 × 1200 px**. Cropped to fill, so keep faces and text away from the edges.
 - **Committee photos:** square, at least **600 × 600 px**.
-- **Gallery:** any shape (the masonry layout keeps each photo's shape), about 1600 px on the long side.
+- **Gallery:** any shape (the gallery and profile photo rows keep each photo's shape), about 1600 px on the long side.
 
 ### Caching (why sheet edits don't show instantly)
 - The script caches each response for **5 minutes** (`CACHE_SECONDS` in `code.gs`). Each request type (and each member profile) is cached separately.
@@ -178,14 +180,14 @@ Select the column's cells (e.g. Committee → Projects, row 2 down) → **Data �
 ## 5. Page layouts
 
 ### Events page (`events.html`)
-1. **Poster carousel** (`data-event-posters`): upcoming events that have a Poster.
+1. **Poster carousel** (`data-event-posters data-placeholder`): every upcoming event; a branded purple card (logo, date, name) when there's no poster or it fails to load.
    - 3 across on desktop, 2 on tablet (≤960px), 1 on phone (≤700px).
    - When there are fewer posters than fit, they are centred. When there are more, **‹ ›** arrows appear (you can also swipe on phones).
    - **Hover** shows date, time · location · price, name, description and a *Sign up* button. On touch screens, **tap** to show the details.
 2. **Upcoming events list** (`data-events`): all upcoming events, poster or not.
 3. **Past events** (`data-past-section`, `data-past-events`): newest first; image and text swap sides on each row. On phones the image sits on top. Hidden entirely while the tab is empty. Events without an image get a logo placeholder.
 
-The **homepage** (`index.html`) shows **all** upcoming events as **poster cards** (no list). Its carousel has `data-placeholder`, so an event without a poster, or whose poster fails to load, gets a branded purple card with the logo, date and name.
+The **homepage** (`index.html`) shows the same poster cards (no list). Remove `data-placeholder` from a carousel to show only events that have posters.
 
 ### Gallery (`/gallery`)
 - Masonry: 3 columns on laptop, 2 on tablet, 1 on phone. Photos keep their own shape and are dealt left to right, so the newest are along the top.
@@ -196,7 +198,7 @@ The **homepage** (`index.html`) shows **all** upcoming events as **poster cards*
 
 ### Member profile (`/member?name=<username>`)
 - Top: photo or initials, name, position, bio, "Back to committee".
-- Then **Projects** (chips), **Photos** (up to 4, 4:3: 4 across on laptop, 2 on tablet, one at a time with ‹ › on phone), **Featured** (up to 2 past events). Sections with nothing in them are left out.
+- Then **Projects** (chips), **Photos** (up to 10, uncropped, one row of equal height; about 4 landscape photos fit on a laptop; ‹ › arrows to see the rest), **Featured** (up to 2 past events). Sections with nothing in them are left out.
 
 ---
 
@@ -279,7 +281,7 @@ Then open http://localhost:4000. `serve` maps `/events` to `events.html` and sho
 | Header/footer moved into `partials/` | Edit once instead of on every page |
 | Links without `.html` (`/events`) | Cleaner URLs. GitHub Pages supports them natively. |
 | Homepage shows all upcoming events as poster cards | Requested (Review 1). Branded card when there's no poster. |
-| Sticky header, no separate top-right button | Requested (Review 1). Menu: About us · Events · Collaborate · Join us. |
+| Sticky header, no separate top-right button | Requested (Review 1). Menu now: About us · Events · Gallery · Collaborate · Join us. |
 | Upcoming events: Time and Price; Type only drives the volunteering tag | Requested (Review 1, Review 1 v2) |
 | Gallery, committee and profiles from the sheet, on hidden pages | Review 1 v2. Internal users assess before deciding to make them public. |
 | Show checkbox, filtered in `code.gs` | Hidden members' details never leave the sheet |

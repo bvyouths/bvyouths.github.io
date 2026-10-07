@@ -65,6 +65,7 @@ a:focus-visible, button:focus-visible {
   font-weight: 700;
 }
 .nav-links a { padding: 6px 0; border-bottom: 2px solid transparent; }
+@media (max-width: 1040px) { .nav-links { gap: 26px; } }
 .nav-links a:hover { color: var(--gold); }
 .nav-links a[aria-current="page"] { border-bottom-color: var(--gold); }
 .button {
@@ -270,6 +271,8 @@ a.event-card:hover { background: rgba(242, 175, 36, .18); margin: 0 -25px; paddi
 .event-type { margin: 0 0 12px; font-size: 10px; color: var(--orange); font-weight: 500; }
 .event-card h3 { font-size: 27px; line-height: 1.05; letter-spacing: -.045em; margin: 0; }
 .event-desc { font-size: 14px; line-height: 1.55; margin: 12px 0 0; max-width: 560px; color: var(--muted); }
+/* Line breaks typed in the sheet (descriptions, bios) show as new lines */
+.event-desc, .profile-bio { white-space: pre-line; }
 .event-cta {
   display: inline-flex;
   align-items: center;
@@ -354,11 +357,8 @@ a.event-card:hover .event-cta { background: var(--orange); color: #fff; }
   border-radius: 30px;
   padding: 6px 10px;
 }
-.poster-tag { position: absolute; top: 14px; right: 14px; z-index: 1; max-width: calc(100% - 28px); transition: opacity .2s; }
-.poster.is-open .poster-tag,
-.poster:focus-visible .poster-tag,
-.poster:has(a:focus-visible) .poster-tag { opacity: 0; }
-@media (hover: hover) { .poster:hover .poster-tag { opacity: 0; } }
+.poster-tag { position: absolute; top: 14px; right: 14px; z-index: 2; max-width: calc(100% - 28px); }
+.poster.has-tag .poster-info { padding-top: 60px; } /* keep the details clear of the tag */
 .event-tag { display: inline-block; vertical-align: middle; margin-left: 12px; letter-spacing: .04em; }
 /* Branded card for events without a poster */
 .poster.placeholder { background: var(--purple); color: var(--cream); }
@@ -494,6 +494,7 @@ a.event-card:hover .event-cta { background: var(--orange); color: #fff; }
 .lead-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8vw; align-items: start; }
 .lead-grid p { font-size: 17px; line-height: 1.75; margin: 0 0 20px; }
 .lead-grid strong { color: var(--orange); }
+.lead-grid .text-link { display: inline-block; margin-top: 6px; }
 /* Wide photo inside a section (About, Collaborate) */
 .photo-banner { margin: 60px 0 0; }
 .photo-banner img { width: 100%; height: auto; border-radius: 22px; object-fit: cover; }
@@ -712,18 +713,20 @@ a.member:hover h3 { color: var(--orange); }
 .profile-projects { margin: 0; }
 .chip-link { text-decoration: underline; text-underline-offset: 3px; transition: background .2s, color .2s; }
 .chip-link:hover { background: var(--orange); color: #fff; }
-/* Photos: 4 across on laptop, 2 on tablet, 1 at a time with arrows on phone (4:3) */
-.photo-carousel { --per-view: 4; --gap: 18px; }
+/* Photos: one row, every photo the same height in its own shape (no cropping).
+   About 4 landscape photos fit on a laptop; ‹ › arrows when there are more. */
+.photo-carousel { --gap: 18px; --photo-h: clamp(170px, 14vw, 240px); }
 .photo {
-  flex: 0 0 calc((100% - (var(--per-view) - 1) * var(--gap)) / var(--per-view));
+  flex: 0 0 auto;
+  height: var(--photo-h);
+  min-width: 120px; /* while the image loads */
   margin: 0;
-  aspect-ratio: 4 / 3;
   border-radius: 18px;
   overflow: hidden;
   background: var(--sand);
   scroll-snap-align: start;
 }
-.photo img { width: 100%; height: 100%; object-fit: cover; }
+.photo img { height: 100%; width: auto; max-width: none; }
 /* Featured: alternating rows on laptop (like Past events), 1 at a time with arrows on phone */
 .featured-track { display: grid; gap: 90px; overflow: visible; }
 
@@ -769,7 +772,6 @@ a.member:hover h3 { color: var(--orange); }
   .ways, .roles { grid-template-columns: 1fr; }
   .pillar-block { grid-template-columns: 1fr; gap: 20px; }
   .poster-carousel { --per-view: 2; }
-  .photo-carousel { --per-view: 2; }
 }
 
 @media (max-width: 800px) {
@@ -816,7 +818,7 @@ a.member:hover h3 { color: var(--orange); }
   .past-list { gap: 60px; }
   .past-event { grid-template-columns: 1fr; gap: 24px; }
   .past-event:nth-child(even) .past-media { order: 0; }
-  .photo-carousel { --per-view: 1; --gap: 16px; }
+  .photo-carousel { --gap: 16px; --photo-h: 220px; }
   .featured-carousel { --gap: 16px; }
   .featured-track { display: flex; gap: var(--gap); overflow-x: auto; }
   .featured-track .past-event { flex: 0 0 100%; scroll-snap-align: start; }

@@ -4,7 +4,8 @@
    Loaded live from the "Committee" tab via code.gs (?type=member&name=…).
    Shows: photo or initials, name, position, bio, then
      Projects  — project names; linked to /events#<ref> when a past event has that ref
-     Photos    — up to 4 latest gallery photos tagged with this username
+     Photos    — up to 10 latest gallery photos tagged with this username, in their own
+                 shape, one row with ‹ › arrows
      Featured  — up to 2 past events, laid out like the Events page
    Sections with nothing in them are left out. A missing, unknown or hidden
    username shows the "Page not found" design.
@@ -88,7 +89,7 @@
             var img = el('img');
             img.src = p.image;
             img.alt = p.name || 'Photo';
-            img.loading = 'lazy';
+            // Not lazy: photos further along the row must load so the row knows its full width
             img.addEventListener('error', function () { fig.remove(); });
             fig.appendChild(img);
             return fig;

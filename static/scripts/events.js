@@ -105,8 +105,11 @@
             addCover();
         }
 
-        // Corner tag, hidden once the details are showing
-        if (isVolunteering(ev)) poster.appendChild(volunteeringTag('poster-tag'));
+        // Corner tag, stays visible while the details are showing
+        if (isVolunteering(ev)) {
+            poster.classList.add('has-tag');
+            poster.appendChild(volunteeringTag('poster-tag'));
+        }
 
         // Details shown on hover / focus / tap
         var info = el('div', 'poster-info');
