@@ -1,6 +1,11 @@
 # Buona Vista Youth Network website: handover
 
-Last updated: 8 Oct 2026
+Last updated: 24 Oct 2026
+
+> **Current status (read first)**
+> - **`main` is an older copy.** It hasn't had the latest work merged in yet.
+> - **All edits are on `staging`.** Make new changes there; GitHub Pages is currently serving `staging` for testing.
+> - **Website Review 3 is pending.** The review document (`BVYN Website Review 3.docx`, kept outside this repo) is out for comments. Its suggested changes (e.g. remove the member profiles and gallery, office bearers only on the committee page, a home page photo slideshow, combine Collaborate and Join us into "Get involved", a different menu bar colour, remove the scrolling banner) are **not made yet**.
 
 This note is for whoever maintains the website next. It covers how the site is built, how events, the gallery and the committee are managed through Google Sheets, the decisions we made and why, and the usual tasks.
 
