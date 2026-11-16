@@ -8,7 +8,12 @@
         <link rel="icon" type="image/png" href="static/images/favicon.png">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+        <!-- Start connecting early to where the sheet data and its photos come from -->
+        <link rel="preconnect" href="https://script.google.com">
+        <link rel="preconnect" href="https://script.googleusercontent.com">
+        <link rel="preconnect" href="https://drive.google.com">
+        <link rel="preconnect" href="https://lh3.googleusercontent.com">
+        <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@700;800;900&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="static/styles/styles.css">
     </head>
     <body>
@@ -21,22 +26,21 @@
                     <h1>BUONA VISTA<br>YOUTH NETWORK</h1>
                     <p class="hero-intro">the youth representative grassroots body serving<br class="br-wide"> residents in Buona Vista Constituency.</p>
                 </div>
-                <figure class="hero-photo">
-                    <img src="static/images/photos/committee-selfie.jpg" alt="Buona Vista Youth Network committee members at a community event" width="1600" height="1200">
+                <!-- Slideshow of Gallery photos ticked "Homepage Header" in the sheet (static/scripts/slideshow.js).
+                     The photo below shows first, and stays if no photos are ticked -->
+                <figure class="hero-photo" data-hero-slideshow>
+                    <div class="hero-frame">
+                        <img class="slide is-active" src="static/images/photos/committee-selfie.jpg" alt="Buona Vista Youth Network committee members at a community event" width="1600" height="1200">
+                    </div>
                 </figure>
             </section>
-        <div class="ticker" aria-hidden="true">
-            <span>MEET <b>✦</b> MAKE <b>✦</b> MOVE <b>✦</b> ADVOCACY <b>✦</b> COHESION <b>✦</b> EMPOWERMENT <b>✦</b>&nbsp;</span>
-            <span>MEET <b>✦</b> MAKE <b>✦</b> MOVE <b>✦</b> ADVOCACY <b>✦</b> COHESION <b>✦</b> EMPOWERMENT <b>✦</b>&nbsp;</span>
-            <span>MEET <b>✦</b> MAKE <b>✦</b> MOVE <b>✦</b> ADVOCACY <b>✦</b> COHESION <b>✦</b> EMPOWERMENT <b>✦</b>&nbsp;</span>
-        </div>
-
             <section class="about section-pad" id="about">
                 <div class="section-label"><span>01</span><span>About us</span></div>
                 <div class="about-grid">
-                    <h2>We believe<br>in <em>showing up.</em></h2>
+                    <h2>For Youth,<br><em>By Youth.</em></h2>
                     <div class="about-body">
-                        <p>We are the youth representative grassroots body serving residents in Buona Vista Constituency. We create the space, spark the conversation and make it easier to turn good ideas into action.</p>
+                        <p>We are the youth representative grassroots body serving residents in Buona Vista Constituency.</p>
+                        <p>We come from all walks of life, united by a shared passion for serving the community and creating meaningful experiences for fellow residents.</p>
                         <a class="text-link" href="/about">Meet the network <span>↗</span></a>
                     </div>
                 </div>
@@ -44,17 +48,17 @@
                     <div class="principle">
                         <b>01</b>
                         <h3>Advocacy</h3>
-                        <p>Ask better questions. Listen to every voice.</p>
+                        <p>Listen to every voice. Champion the needs of the community.</p>
                     </div>
                     <div class="principle">
                         <b>02</b>
                         <h3>Cohesion</h3>
-                        <p>Big change begins with something you can do today.</p>
+                        <p>Build a vibrant and inclusive Buona Vista community.</p>
                     </div>
                     <div class="principle">
                         <b>03</b>
                         <h3>Empowerment</h3>
-                        <p>There’s always room for one more at the table.</p>
+                        <p>Support ground-up initiatives. Uplift all segments of society.</p>
                     </div>
                 </div>
             </section>
@@ -71,7 +75,7 @@
             </section>
 
             <section class="instagram section-pad">
-                <div class="section-label"><span>03</span><span>From the community</span></div>
+                <div class="section-label"><span>03</span><span>Throwback</span></div>
                 <div class="instagram-heading">
                     <h2>See what’s<br><em>in motion.</em></h2>
                     <p>Ideas, moments and updates from the Buona Vista Youth Network community. Follow us at <a class="text-link" href="https://www.instagram.com/buonavistayn/" target="_blank" rel="noopener">@buonavistayn</a></p>
@@ -85,6 +89,8 @@
         <!-- Footer: edit partials/footer.html -->
         <div class="include-footer" data-include="partials/footer.html"></div>
         <script src="static/scripts/script.js"></script>
+        <script src="static/scripts/api.js"></script>
         <script src="static/scripts/events.js"></script>
+        <script src="static/scripts/slideshow.js"></script>
     </body>
 </html>

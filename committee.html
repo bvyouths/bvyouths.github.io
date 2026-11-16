@@ -8,7 +8,12 @@
         <link rel="icon" type="image/png" href="static/images/favicon.png">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+        <!-- Start connecting early to where the sheet data and its photos come from -->
+        <link rel="preconnect" href="https://script.google.com">
+        <link rel="preconnect" href="https://script.googleusercontent.com">
+        <link rel="preconnect" href="https://drive.google.com">
+        <link rel="preconnect" href="https://lh3.googleusercontent.com">
+        <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@700;800;900&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="static/styles/styles.css">
     </head>
     <body>
@@ -22,14 +27,16 @@
                 <div class="blob" aria-hidden="true"></div>
             </section>
 
-            <!-- Hidden page: not linked from the menu yet. Members are listed in partials/committee.html -->
+            <!-- Members come from the "Committee" tab (see partials/committee.html) -->
             <section class="section-pad">
-                <div class="include-committee" data-include="partials/committee.html"></div>
+                <div class="include-committee" data-include="/partials/committee.html"></div>
             </section>
         </main>
 
         <!-- Footer: edit partials/footer.html -->
         <div class="include-footer" data-include="partials/footer.html"></div>
         <script src="static/scripts/script.js"></script>
+        <script src="static/scripts/api.js"></script>
+        <script src="static/scripts/committee.js"></script>
     </body>
 </html>

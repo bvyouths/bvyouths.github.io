@@ -4,10 +4,16 @@
         <span>Buona Vista<br>Youth Network</span>
     </a>
     <nav class="nav-links" id="site-nav" aria-label="Main navigation">
-        <a href="/about">About us</a>
+        <!-- "About us" opens a small menu on hover / keyboard focus; on phones the sub-link sits under it -->
+        <div class="nav-item has-menu">
+            <a href="/about">About us <span class="nav-caret" aria-hidden="true">▾</span></a>
+            <div class="nav-menu">
+                <a href="/committee">Committee</a>
+            </div>
+        </div>
         <a href="/events">Events</a>
-        <a href="/collaborate">Collaborate</a>
-        <a href="/collaborate#join">Join us</a>
+        <a href="/gallery">Gallery</a>
+        <a href="/collaborate">Get involved</a>
     </nav>
     <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
         <span class="menu-icon" aria-hidden="true"><i></i><i></i><i></i></span>

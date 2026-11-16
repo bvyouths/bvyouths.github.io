@@ -8,7 +8,12 @@
         <link rel="icon" type="image/png" href="static/images/favicon.png">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+        <!-- Start connecting early to where the sheet data and its photos come from -->
+        <link rel="preconnect" href="https://script.google.com">
+        <link rel="preconnect" href="https://script.googleusercontent.com">
+        <link rel="preconnect" href="https://drive.google.com">
+        <link rel="preconnect" href="https://lh3.googleusercontent.com">
+        <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@700;800;900&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="static/styles/styles.css">
     </head>
     <body>
@@ -21,28 +26,22 @@
                 <p class="hero-intro">Workshops, gatherings and open conversations for people who want to meet, learn and make a difference.</p>
                 <div class="blob" aria-hidden="true"></div>
             </section>
-        <div class="ticker" aria-hidden="true">
-            <span>MEET <b>✦</b> MAKE <b>✦</b> MOVE <b>✦</b> ADVOCACY <b>✦</b> COHESION <b>✦</b> EMPOWERMENT <b>✦</b>&nbsp;</span>
-            <span>MEET <b>✦</b> MAKE <b>✦</b> MOVE <b>✦</b> ADVOCACY <b>✦</b> COHESION <b>✦</b> EMPOWERMENT <b>✦</b>&nbsp;</span>
-            <span>MEET <b>✦</b> MAKE <b>✦</b> MOVE <b>✦</b> ADVOCACY <b>✦</b> COHESION <b>✦</b> EMPOWERMENT <b>✦</b>&nbsp;</span>
-        </div>
-
             <section class="events section-pad">
                 <div class="section-label"><span>01</span><span>Upcoming events</span></div>
                 <div class="events-heading">
                     <h2>Save the <em>date.</em></h2>
-                    <a class="text-link" href="/collaborate#join">Volunteer at an event <span>↗</span></a>
+                    <a class="text-link" href="/collaborate#join">Volunteer with BV YN <span>↗</span></a>
                 </div>
                 <!-- Loaded live from Google Sheets (static/scripts/events.js).
-                     Posters: upcoming events that have a Poster link. List: all upcoming events -->
-                <div class="poster-carousel" data-event-posters></div>
+                     Posters: every upcoming event (brand card when there's no poster). List: all upcoming events -->
+                <div class="poster-carousel" data-event-posters data-placeholder></div>
                 <div class="event-list" data-events aria-live="polite"></div>
             </section>
 
             <!-- Loaded from the "Past events" tab. Stays hidden if the tab is empty -->
             <section class="past-events section-pad" data-past-section hidden>
                 <div class="section-label"><span>02</span><span>Past events</span></div>
-                <h2>Where we’ve <em>been.</em></h2>
+                <h2>Creating <em>impact.</em></h2>
                 <div class="past-list" data-past-events></div>
             </section>
 
@@ -63,6 +62,7 @@
         <!-- Footer: edit partials/footer.html -->
         <div class="include-footer" data-include="partials/footer.html"></div>
         <script src="static/scripts/script.js"></script>
+        <script src="static/scripts/api.js"></script>
         <script src="static/scripts/events.js"></script>
     </body>
 </html>

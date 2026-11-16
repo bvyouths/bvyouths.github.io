@@ -4,6 +4,7 @@
       into any element with data-include="..."
    2. Highlights the current page in the menu
    3. Mobile menu, smooth scrolling, footer year
+   Other scripts can wait for the partials with window.includesReady.then(...)
    ========================================================== */
 
 // ---------- 1. Load shared header / footer ----------
@@ -67,7 +68,7 @@ function setUpSmoothScroll() {
         if (!link) return;
         const id = link.getAttribute('href');
         if (id.length < 2) return;
-        const target = document.querySelector(id);
+        const target = document.getElementById(decodeURIComponent(id.slice(1)));
         if (target) {
             event.preventDefault();
             target.scrollIntoView({ behavior: 'smooth' });
@@ -84,14 +85,15 @@ function setYear() {
 
 // ---------- Run ----------
 setUpSmoothScroll();
-loadIncludes().then(() => {
+window.includesReady = loadIncludes().then(() => {
     markCurrentPage();
     setUpMenu();
     setYear();
 
     // If the page was opened with a #section link, jump there now that the header is in place
+    // (getElementById, because ids such as "2026-hlw" aren't valid CSS selectors)
     if (window.location.hash) {
-        const target = document.querySelector(window.location.hash);
+        const target = document.getElementById(decodeURIComponent(window.location.hash.slice(1)));
         if (target) target.scrollIntoView({ behavior: 'instant' });
     }
 });
