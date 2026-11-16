@@ -6,7 +6,7 @@ Last updated: 16 Nov 2026
 > - **`main` is an older copy.** It hasn't had the latest work merged in yet.
 > - **All edits are on `staging`.** Make new changes there; GitHub Pages is currently serving `staging` for testing.
 > - **Website Review 3 is applied on `staging`** (16 Nov 2026): member profiles removed, scrolling banner removed, "Get involved" menu link, Committee under "About us", home page slideshow, two sign-up buttons per event, new fonts, wording changes. See §11 for what was decided.
-> - **The Apps Script must be redeployed** with the current `code.gs` (see §4) for the slideshow, the Volunteer button and the Appointments bubbles to work. Until then the site still works, just without those three.
+> - **The deployed Apps Script is behind the repo's `code.gs`** (as of 16 Nov 2026). Paste the current `code.gs` into Apps Script and deploy a new version (see §4) to get: Page Photo for the About / Get involved photos, and only-needed-columns auto-creation.
 > - **Still open from Review 3:** who appears on the Committee page (office bearers only, or every member). The site shows whoever is listed in the Committee tab with Show ticked, so this is a content decision, not a code change.
 
 This note is for whoever maintains the website next. It covers how the site is built, how events, the gallery and the committee are managed through Google Sheets, the decisions we made and why, and the usual tasks.
@@ -105,7 +105,7 @@ https://script.google.com/macros/s/AKfycbyZ_Sp_VuXyBVqNtekwKcshiGuwXohG6PH-J7k9g
 | add `nocache=1` | Reads the sheet fresh and refreshes the cache (see below) |
 
 ### Sheet tabs and columns
-Row 1 must hold the headers. They can be in any order, and capitals and extra spaces are ignored. **The script never creates or changes tabs or columns** (decided after Review 3): add them in the sheet yourself. A missing column is treated as empty; a missing or renamed tab makes that part of the site show its "couldn't load" message. Format text columns such as Time and Price as **plain text** (Format → Number → Plain text) so Sheets doesn't convert entries like `6.30pm`; make **Show** and **Homepage Header** checkboxes (Insert → Checkbox).
+Row 1 must hold the headers. They can be in any order, and capitals and extra spaces are ignored. **The script creates missing tabs and columns, but only the ones the website reads** (listed below, and in `TABS` at the top of `code.gs`). It runs when the API is called, or straight away via `setUpSheets` (function dropdown → Run). It never adds anything else, and never deletes, moves or renames columns. Columns it creates are plain text (so `6.30pm` or `$5/pax` stay as typed); **Show** and **Homepage Header** get checkboxes. If you add a column yourself, format Time and Price as plain text (Format → Number → Plain text).
 
 **`Upcoming events`**: `Date | Time | Location | Price | Event Name | Description | Link | Volunteer Link | Poster | Type`
 - **Time** and **Price** are plain text, shown exactly as typed on one line: `Time · Location · Price` (e.g. `6.30pm to 9.30pm · Leng Kee CC · $5/pax`).
@@ -156,13 +156,13 @@ Row 1 must hold the headers. They can be in any order, and capitals and extra sp
 ### Updating the Apps Script (important)
 `code.gs` in this repo is only a **copy**. The version that actually runs lives in the Google Sheet's Apps Script project (Extensions → Apps Script).
 1. Paste the updated `code.gs` into the Apps Script editor and save.
-2. If the change uses a new column, add it to the sheet yourself (the script won't create it).
+2. Optional: run `setUpSheets` once (function dropdown → Run) to add any new columns straight away.
 3. **Deploy → Manage deployments → ✏️ Edit → Version: New version → Deploy.**
    This **keeps the same URL**. Choosing "New deployment" instead creates a new URL, and you would then need to update `API_URL` in `api.js`.
 4. Open the `?nocache=1` links to confirm the JSON looks right.
 
 ### Testing code.gs without the sheet
-`code.gs` has no external dependencies besides Google's services, so it can be run in Node with small stand-ins for `SpreadsheetApp`, `CacheService` etc. to check the JSON output (this was done for the Review 1 v2 and Review 3 changes, and to confirm the script makes no changes to the sheet).
+`code.gs` has no external dependencies besides Google's services, so it can be run in Node with small stand-ins for `SpreadsheetApp`, `CacheService` etc. to check the JSON output (this was done for the Review 1 v2 and Review 3 changes, and to confirm the script only ever adds the columns it reads).
 
 ---
 
@@ -258,9 +258,9 @@ Then open http://localhost:4000. `serve` maps `/events` to `events.html` and sho
 | New sheet row doesn't appear | 5-minute cache. Open the matching `nocache=1` link. For upcoming events, also check the date isn't in the past. |
 | Image doesn't show | Check the link is on the right row and the Drive file is shared "Anyone with the link". Images inserted into cells don't work: use a link. Check there's no **second** empty column with the same header at the far right (the script adds one if it can't find the header). |
 | Member missing from /committee | Show isn't ticked, or Name is blank. |
-| Home page slideshow shows only the committee photo | No Gallery photo has Homepage Header ticked, the ticked photos' Drive files aren't shared, or the column header in the sheet is spelt differently. |
-| About / Get involved shows the built-in photo, not the chosen one | Page Photo isn't exactly `/about` / `/collaborate` (capitals and slashes don't matter), the Drive file isn't shared, or the column header in the sheet is spelt differently. |
-| No "Volunteer" button | Volunteer Link is empty or isn't a link, or the column header in the sheet is spelt differently. |
+| Home page slideshow shows only the committee photo | No Gallery photo has Homepage Header ticked, the ticked photos' Drive files aren't shared, or the column header in the sheet is spelt differently, or the Apps Script hasn't been redeployed since the column was added. |
+| About / Get involved shows the built-in photo, not the chosen one | Page Photo isn't exactly `/about` / `/collaborate` (capitals and slashes don't matter), the Drive file isn't shared, or the column header in the sheet is spelt differently, or the Apps Script hasn't been redeployed since the column was added. |
+| No "Volunteer" button | Volunteer Link is empty or isn't a link, or the column header in the sheet is spelt differently, or the Apps Script hasn't been redeployed since the column was added. |
 | Gallery shows an old list for a moment | The browser shows its remembered list first, then updates. The sheet's 5-minute cache also applies. |
 | "We couldn't load …" | The API returned an error or the URL is wrong. Open the `/exec` URL directly and read the `error` message in the JSON. Common causes: a tab renamed, a required header missing, or a new deployment URL not copied into `api.js`. |
 | Header/footer missing locally | The file was opened directly. Use `npx serve` (§8). |
@@ -294,7 +294,7 @@ Then open http://localhost:4000. `serve` maps `/events` to `events.html` and sho
 | Posters above the list on the Events page | Keeps a text list of every event, including ones without posters |
 | Past events come only from the `Past events` tab | The committee chooses the photo and write-up. Nothing moves automatically. |
 | 404 page uses root-relative paths | So it works at any URL depth |
-| `code.gs` never creates tabs or columns | Decided after Review 3: the sheet's layout is managed by hand, and the script only reads it. Unused tabs/columns (Projects, Project Ref, profile columns) removed from the code. |
+| `code.gs` auto-creates only the tabs and columns the website reads | Decided after Review 3: leftover auto-created columns from removed features piled up. `TABS` headers must match the `readTab_()` calls; when a feature is removed, its column comes off the list. Unused tabs/columns (Projects, Project Ref, profile columns) removed from the code. |
 | All work on `staging`, merged to `main` by PR | `main` is the live site |
 
 ---

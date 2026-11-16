@@ -9,14 +9,15 @@
  *   add &nocache=1 (or ?nocache=1) to skip the 5-minute cache after editing the sheet
  *
  * Columns (row 1 headers, any order; capitals and extra spaces don't matter).
- * The script never creates or changes tabs or columns: add them in the sheet yourself.
- * A missing column is simply treated as empty; a missing tab returns an error.
+ * The tabs and columns below — only the ones the website uses — are created
+ * automatically if missing (or run setUpSheets() from the editor). Nothing else is
+ * ever added, and nothing is deleted or reordered; other columns are just ignored.
  *   Upcoming events: Date | Time | Location | Price | Event Name | Description | Link | Volunteer Link | Poster | Type
  *   Past events:     Hero Image | Event Name | Event Date | Event Type | Event Description
  *   Gallery:         Image | Event Name | Description | Label | Homepage Header | Page Photo
  *   Committee:       Name | Position | Image | Appointments | Show
- * Format text columns (e.g. Time, Price) as plain text so Sheets doesn't convert entries
- * like "6.30pm" or "$5/pax". Show and Homepage Header are checkboxes (Insert → Checkbox).
+ * Columns it creates are formatted as plain text, so entries like "6.30pm" or "$5/pax"
+ * stay as typed; Show and Homepage Header get checkboxes.
  *
  * Upcoming events
  * - Past dates are hidden automatically (dates compared in the script's time zone).
@@ -44,12 +45,27 @@
  * "Anyone with the link". Posters A4 portrait, hero images 4:3, committee photos square.
  */
 
+// Only the columns the website reads. Keep this in step with the readTab_() calls below,
+// so the script never adds columns nobody uses.
 const TABS = {
-  upcoming: { name: 'Upcoming events' },
-  past: { name: 'Past events' },
-  gallery: { name: 'Gallery' },
-  committee: { name: 'Committee' }
+  upcoming: {
+    name: 'Upcoming events',
+    headers: ['Date', 'Time', 'Location', 'Price', 'Event Name', 'Description', 'Link', 'Volunteer Link', 'Poster', 'Type']
+  },
+  past: {
+    name: 'Past events',
+    headers: ['Hero Image', 'Event Name', 'Event Date', 'Event Type', 'Event Description']
+  },
+  gallery: {
+    name: 'Gallery',
+    headers: ['Image', 'Event Name', 'Description', 'Label', 'Homepage Header', 'Page Photo']
+  },
+  committee: {
+    name: 'Committee',
+    headers: ['Name', 'Position', 'Image', 'Appointments', 'Show']
+  }
 };
+const CHECKBOX_HEADERS = ['show', 'homepage header'];
 const CACHE_SECONDS = 300; // sheet edits show on the site within 5 minutes
 const CACHE_KEY = 'site_v9'; // change this to clear the cache after editing the script
 
@@ -67,6 +83,7 @@ function doGet(e) {
     body = params.nocache === '1' ? null : cache.get(cacheKey);
 
     if (!body) {
+      ensureSheets_();
       let data;
       if (type === 'past') data = { events: getPastEvents_() };
       else if (type === 'gallery') data = { photos: getGallery_() };
@@ -83,6 +100,52 @@ function doGet(e) {
   return ContentService
     .createTextOutput(body)
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+/** Run this from the Apps Script editor to create the tabs and columns straight away. */
+function setUpSheets() {
+  ensureSheets_();
+}
+
+/**
+ * Makes sure every tab the website uses exists, with the columns it reads (TABS above).
+ * Existing tabs keep their data; any missing headers are added after the last column.
+ * Never adds anything that isn't in TABS, and never deletes or moves columns.
+ */
+function ensureSheets_() {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    Object.keys(TABS).forEach(function (key) {
+      const tab = TABS[key];
+      const sheet = ss.getSheetByName(tab.name) || ss.insertSheet(tab.name);
+      const lastCol = sheet.getLastColumn();
+      const existing = lastCol ? sheet.getRange(1, 1, 1, lastCol).getDisplayValues()[0] : [];
+      const have = existing.map(function (h) { return String(h).trim().toLowerCase(); });
+      const missing = tab.headers.filter(function (h) { return have.indexOf(h.toLowerCase()) === -1; });
+      if (!missing.length) return;
+
+      // Fill after the last non-empty header so blank trailing header cells aren't skipped over.
+      let start = have.length;
+      while (start > 0 && !have[start - 1]) start--;
+      sheet.getRange(1, start + 1, 1, missing.length).setValues([missing]).setFontWeight('bold');
+      if (sheet.getMaxRows() > 1) {
+        missing.forEach(function (header, i) {
+          const column = sheet.getRange(2, start + 1 + i, sheet.getMaxRows() - 1, 1);
+          if (CHECKBOX_HEADERS.indexOf(header.toLowerCase()) !== -1) {
+            column.setDataValidation(SpreadsheetApp.newDataValidation().requireCheckbox().build());
+          } else {
+            // Plain text, so times / prices / dates aren't auto-converted by Sheets
+            column.setNumberFormat('@');
+          }
+        });
+      }
+      sheet.setFrozenRows(1);
+    });
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 /**
