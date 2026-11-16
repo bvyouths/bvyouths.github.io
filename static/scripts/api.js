@@ -3,7 +3,7 @@
    (via the Apps Script web app in code.gs).
 
    Load after script.js and before events.js / gallery.js /
-   committee.js / member.js:
+   committee.js / slideshow.js:
      <script src="/static/scripts/api.js"></script>
    ========================================================== */
 window.BVYN = (function () {
@@ -34,6 +34,37 @@ window.BVYN = (function () {
             });
     }
 
+    // Like getJSON, but remembers the last answer in this browser so repeat visits show
+    // something straight away. onData runs with the remembered data (if any), then again
+    // with fresh data only if it changed. onError runs only when there is nothing to show.
+    function cachedJSON(query, onData, onError) {
+        var key = 'bvyn:' + query;
+        var remembered = null;
+        try { remembered = window.localStorage.getItem(key); } catch (e) { /* storage blocked */ }
+        if (remembered) {
+            try { onData(JSON.parse(remembered)); } catch (e) { remembered = null; }
+        }
+        return getJSON(query)
+            .then(function (data) {
+                var copy = {};
+                Object.keys(data).forEach(function (k) { if (k !== 'updated') copy[k] = data[k]; });
+                var fresh = JSON.stringify(copy);
+                if (fresh === remembered) return;
+                try { window.localStorage.setItem(key, fresh); } catch (e) { /* storage blocked or full */ }
+                onData(copy);
+            })
+            .catch(function (err) {
+                if (!remembered && onError) onError(err);
+                else if (!remembered) throw err;
+            });
+    }
+
+    // Google Drive image links come as ...thumbnail?id=…&sz=w1600. Asking for a size closer
+    // to what's shown makes pages load much faster. Other links are returned unchanged.
+    function sized(url, width) {
+        return String(url || '').replace(/([?&]sz=w)\d+/, '$1' + width);
+    }
+
     // Turns whatever is in a Link column into a proper URL
     function cleanLink(value) {
         var url = String(value || '').trim();
@@ -50,11 +81,6 @@ window.BVYN = (function () {
             a.target = '_blank';
             a.rel = 'noopener noreferrer';
         }
-    }
-
-    // Same tidying as code.gs: "  Jane Tan " → "jane-tan"
-    function slug(value) {
-        return String(value || '').trim().toLowerCase().replace(/\s+/g, '-');
     }
 
     // "Jane Tan" → "JT"
@@ -78,7 +104,7 @@ window.BVYN = (function () {
         }
         if (person.image) {
             var img = el('img');
-            img.src = person.image;
+            img.src = sized(person.image, 600);
             img.alt = person.name;
             img.loading = 'lazy';
             img.addEventListener('error', useInitials);
@@ -97,7 +123,7 @@ window.BVYN = (function () {
         var media = el('div', 'past-media');
         if (ev.image) {
             var img = el('img');
-            img.src = ev.image;
+            img.src = sized(ev.image, 1200);
             img.alt = ev.name;
             img.loading = 'lazy';
             img.addEventListener('error', function () { media.classList.add('no-image'); img.remove(); });
@@ -157,7 +183,7 @@ window.BVYN = (function () {
         next.addEventListener('click', function () { track.scrollBy({ left: step(1), behavior: 'smooth' }); });
         track.addEventListener('scroll', update, { passive: true });
         window.addEventListener('resize', update);
-        // Images that size themselves (e.g. profile photos) change the row's width once loaded
+        // Images that size themselves change the row's width once loaded
         track.querySelectorAll('img').forEach(function (img) { img.addEventListener('load', update); });
         update();
         return track;
@@ -185,9 +211,10 @@ window.BVYN = (function () {
     return {
         el: el,
         getJSON: getJSON,
+        cachedJSON: cachedJSON,
+        sized: sized,
         cleanLink: cleanLink,
         openInNewTab: openInNewTab,
-        slug: slug,
         initials: initials,
         canHover: canHover,
         avatar: avatar,

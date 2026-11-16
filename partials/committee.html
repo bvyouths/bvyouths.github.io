@@ -1,8 +1,9 @@
 <!--
-  Committee grid — shown on /committee (in the footer and linked from About; noindex).
+  Committee grid — shown on /committee (under "About us" in the menu, in the footer and linked from About; noindex).
   Members come from the "Committee" tab of the Google Sheet (static/scripts/committee.js):
-  Name | Username | Position | Image | Bio | Projects | Featured | Show
-  Only rows with Show ticked appear. Each card links to /member?name=<username>.
+  Name | Position | Image | Appointments | Show
+  Only rows with Show ticked appear. Appointments is optional: each comma-separated
+  item shows as a bubble under the name.
   Can be placed on another page (e.g. /about) with:
     <div data-include="/partials/committee.html"></div>  plus api.js and committee.js
 -->

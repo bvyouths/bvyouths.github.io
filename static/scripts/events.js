@@ -14,6 +14,8 @@
      Each past event with a Project Ref gets that ref as its id, so /events#2026-hlw scrolls to it.
 
    Events whose Type is "Volunteering Opportunity" get a tag on their card.
+   Buttons: "Sign up" (the Link column) and "Volunteer" (the Volunteer Link column);
+   an event can have either, both or neither.
    ========================================================== */
 (function () {
     var B = window.BVYN;
@@ -50,14 +52,30 @@
         return date;
     }
 
+    // "Sign up" (take part) and / or "Volunteer" buttons; null if the event has neither link
+    function buildActions(ev) {
+        var signUp = B.cleanLink(ev.link);
+        var volunteer = B.cleanLink(ev.volunteerLink);
+        if (!signUp && !volunteer) return null;
+        var actions = el('div', 'event-actions');
+        if (signUp) {
+            var cta = el('a', 'event-cta', 'Sign up ↗');
+            B.openInNewTab(cta, signUp);
+            cta.setAttribute('aria-label', 'Sign up for ' + ev.name + ' (opens link)');
+            actions.appendChild(cta);
+        }
+        if (volunteer) {
+            var alt = el('a', 'event-cta event-cta-alt', 'Volunteer ↗');
+            B.openInNewTab(alt, volunteer);
+            alt.setAttribute('aria-label', 'Volunteer at ' + ev.name + ' (opens link)');
+            actions.appendChild(alt);
+        }
+        return actions;
+    }
+
     // ---------- Upcoming events list ----------
     function buildCard(ev) {
-        var link = B.cleanLink(ev.link);
-        var card = el(link ? 'a' : 'article', 'event-card');
-        if (link) {
-            B.openInNewTab(card, link);
-            card.setAttribute('aria-label', ev.name + ' — sign up (opens link)');
-        }
+        var card = el('article', 'event-card');
 
         card.appendChild(buildDate(ev));
 
@@ -71,13 +89,13 @@
         if (ev.description) details.appendChild(el('p', 'event-desc', ev.description));
         card.appendChild(details);
 
-        if (link) card.appendChild(el('span', 'event-cta', 'Sign up ↗'));
+        var actions = buildActions(ev);
+        if (actions) card.appendChild(actions);
         return card;
     }
 
     // ---------- Upcoming event posters ----------
     function buildPoster(ev) {
-        var link = B.cleanLink(ev.link);
         var poster = el('article', 'poster');
         poster.tabIndex = 0;
         poster.setAttribute('aria-label', ev.name);
@@ -96,7 +114,7 @@
         }
         if (ev.poster) {
             var img = el('img');
-            img.src = ev.poster;
+            img.src = B.sized(ev.poster, 900);
             img.alt = 'Poster for ' + ev.name;
             img.loading = 'lazy';
             img.addEventListener('error', function () { img.remove(); addCover(); });
@@ -118,12 +136,8 @@
         if (meta) info.appendChild(el('p', 'event-type', meta));
         info.appendChild(el('h3', '', ev.name));
         if (ev.description) info.appendChild(el('p', 'event-desc', ev.description));
-        if (link) {
-            var cta = el('a', 'event-cta', 'Sign up ↗');
-            B.openInNewTab(cta, link);
-            cta.setAttribute('aria-label', 'Sign up for ' + ev.name + ' (opens link)');
-            info.appendChild(cta);
-        }
+        var actions = buildActions(ev);
+        if (actions) info.appendChild(actions);
         poster.appendChild(info);
 
         // Touch screens have no hover: first tap shows the details, tapping again hides them
@@ -202,7 +216,7 @@
                     if (section) section.hidden = false;
                 });
 
-                // Arrived from a profile's project link (/events#2026-hlw): scroll there once it exists
+                // Arrived from a link to one past event (/events#2026-hlw): scroll there once it exists
                 // and the upcoming events above it have finished loading (so it doesn't move afterwards)
                 var target = window.location.hash && document.getElementById(decodeURIComponent(window.location.hash.slice(1)));
                 if (target) {

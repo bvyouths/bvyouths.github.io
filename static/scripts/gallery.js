@@ -7,6 +7,10 @@
    that keeps each photo's own shape: 3 columns on laptop, 2 on tablet, 1 on phone.
    Laptop: hover shows the event name, description and label; click enlarges.
    Phone/tablet: tap shows the details.
+
+   To appear quickly: the grid asks for smaller copies of each photo (the full size is
+   only loaded when one is enlarged), the first few load straight away, and the last
+   list of photos is remembered in the browser so repeat visits don't wait for the sheet.
    ========================================================== */
 (function () {
     var B = window.BVYN;
@@ -39,7 +43,7 @@
             document.body.appendChild(lightbox);
         }
         lastFocus = document.activeElement;
-        lightboxImg.src = photo.image;
+        lightboxImg.src = B.sized(photo.image, 1600);
         lightboxImg.alt = photo.name || 'Gallery photo';
         lightboxCaption.textContent = [photo.name, photo.label].filter(Boolean).join(' · ');
         lightboxCaption.hidden = !lightboxCaption.textContent;
@@ -55,14 +59,18 @@
     }
 
     // ---------- One photo ----------
-    function buildItem(photo) {
+    var GRID_WIDTH = 800;  // px asked for in the grid (columns are about 370px wide, doubled for sharp screens)
+    var EAGER = 6;         // the first photos load immediately; the rest as they scroll into view
+
+    function buildItem(photo, index) {
         var item = el('figure', 'gallery-item');
         item.tabIndex = 0;
 
         var img = el('img');
-        img.src = photo.image;
         img.alt = photo.name || 'Gallery photo';
-        img.loading = 'lazy';
+        img.loading = index < EAGER ? 'eager' : 'lazy';
+        img.decoding = 'async';
+        img.src = B.sized(photo.image, GRID_WIDTH);
         img.addEventListener('error', function () { item.remove(); });
         item.appendChild(img);
 
@@ -92,9 +100,9 @@
     }
 
     // Deals photos into columns left to right, so the newest are along the top
-    function layout(box, items) {
+    function layout(box, items, force) {
         var count = columnCount();
-        if (box.dataset.columns === String(count)) return;
+        if (!force && box.dataset.columns === String(count)) return;
         box.dataset.columns = count;
         box.innerHTML = '';
         var columns = [];
@@ -103,22 +111,25 @@
     }
 
     function setUp(box) {
+        var items = [];
         box.appendChild(el('div', 'skeleton'));
-        B.getJSON('type=gallery')
-            .then(function (data) {
-                var photos = data.photos || [];
-                if (!photos.length) {
-                    B.showStatus(box, 'Photos are on the way — follow us for the latest.', true);
-                    return;
-                }
-                var items = photos.map(buildItem);
-                layout(box, items);
-                window.addEventListener('resize', function () { layout(box, items); });
-            })
-            .catch(function (err) {
-                console.error('Could not load the gallery:', err);
-                B.showStatus(box, 'We couldn’t load photos right now. For the latest, check our Instagram.', true);
-            });
+        window.addEventListener('resize', function () { if (items.length) layout(box, items); });
+
+        // Runs with the remembered photos first (if any), then again if the sheet has changed
+        B.cachedJSON('type=gallery', function (data) {
+            var photos = data.photos || [];
+            if (!photos.length) {
+                items = [];
+                delete box.dataset.columns;
+                B.showStatus(box, 'Photos are on the way — follow us for the latest.', true);
+                return;
+            }
+            items = photos.map(buildItem);
+            layout(box, items, true);
+        }, function (err) {
+            console.error('Could not load the gallery:', err);
+            B.showStatus(box, 'We couldn’t load photos right now. For the latest, check our Instagram.', true);
+        });
     }
 
     B.ready(function () {

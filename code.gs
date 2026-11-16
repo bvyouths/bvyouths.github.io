@@ -2,44 +2,46 @@
  * Buona Vista Youth Network — Website API
  *
  * Serves the sheet's tabs as JSON so the GitHub Pages site can fetch them.
- *   .../exec                          → "Upcoming events"
- *   .../exec?type=past                → "Past events"
- *   .../exec?type=gallery             → "Gallery"
- *   .../exec?type=committee           → "Committee" (shown members only, for the /committee grid)
- *   .../exec?type=member&name=jane-tan → one shown member's profile (/member?name=jane-tan)
- *
- * Line breaks typed in a cell (Ctrl/Cmd+Enter) are kept and shown as new lines on the site
- * for descriptions and bios.
+ *   .../exec                 → "Upcoming events"
+ *   .../exec?type=past       → "Past events"
+ *   .../exec?type=gallery    → "Gallery" (also feeds the home page slideshow)
+ *   .../exec?type=committee  → "Committee" (shown members only, for the /committee grid)
  *   add &nocache=1 (or ?nocache=1) to skip the 5-minute cache after editing the sheet
  *
  * Columns (row 1 headers, any order). Missing tabs / columns are created automatically
  * the first time the API runs — or run setUpSheets() from the editor to create them now.
- *   Upcoming events: Date | Time | Location | Price | Event Name | Description | Link | Poster | Type
+ *   Upcoming events: Date | Time | Location | Price | Event Name | Description | Link | Volunteer Link | Poster | Type
  *   Past events:     Hero Image | Event Name | Event Date | Event Type | Event Description | Project Ref
  *   Projects:        Project Ref | Project Name
- *   Gallery:         Image | Event Name | Description | Label | Persons | Project Ref
- *   Committee:       Name | Username | Position | Image | Bio | Projects | Featured | Show
+ *   Gallery:         Image | Event Name | Description | Label | Homepage Header | Project Ref
+ *   Committee:       Name | Position | Image | Appointments | Show
  *
  * Upcoming events
  * - Past dates are hidden automatically (dates compared in the script's time zone).
  * - Sorted soonest first. Rows whose date can't be understood are shown at the end.
+ * - Link = sign up to take part. Volunteer Link = sign up to volunteer. An event can have
+ *   either, both or neither; each one gets its own button.
  * - Type isn't displayed; "Volunteering Opportunity" adds a tag on the event's card.
  * Past events, Gallery
  * - Shown newest first = bottom row first. Event Date is free text (e.g. "Quarterly",
  *   "Mar – Jul 2026"), so it is never used for sorting.
- * - Project Refs should be unique in Past events. If one repeats, the bottom row wins.
+ * - Gallery photos with Homepage Header ticked make up the home page slideshow.
  * Committee
- * - Only rows with the Show checkbox ticked appear anywhere (grid, profile, photo tags).
- *   Hidden members' details never leave the sheet.
- * - Username is tidied to lower case with hyphens for spaces ("Jane Tan" → jane-tan).
- *   If two rows share one, the first row wins.
- * - Projects / Featured / Persons are multi-select dropdowns: comma-separated refs/usernames.
- *   Only the first 2 Featured refs are used.
- * - Gallery's Persons column is never sent to the website; it only picks each member's
- *   10 latest photos.
+ * - Only rows with the Show checkbox ticked appear. Hidden members' details never leave
+ *   the sheet. List whoever should be displayed (e.g. office bearers only).
+ * - Appointments is optional: comma-separated items (e.g. "Membership, BV Social"), each
+ *   shown as a small bubble under the name. Leave blank for no bubbles.
+ * Not used by the website (kept for possible future use; safe to leave or delete):
+ * - The Projects tab and the Project Ref columns, apart from giving each past event an
+ *   address like /events#2026-hlw.
+ * - Committee: Username, Bio, Projects, Featured. Gallery: Persons. (These were for the
+ *   member profile pages, removed after Website Review 3.)
  *
- * New columns are formatted as plain text (the Show column gets checkboxes), so entries
- * like "6.30pm to 9.30pm" or "$5/pax" are shown exactly as typed.
+ * Line breaks typed in a cell (Ctrl/Cmd+Enter) are kept and shown as new lines on the site
+ * for descriptions.
+ *
+ * New columns are formatted as plain text (Show and Homepage Header get checkboxes), so
+ * entries like "6.30pm to 9.30pm" or "$5/pax" are shown exactly as typed.
  *
  * Images: paste an image link. Google Drive links work if the file is shared as
  * "Anyone with the link". Posters A4 portrait, hero images 4:3, committee photos square.
@@ -48,7 +50,7 @@
 const TABS = {
   upcoming: {
     name: 'Upcoming events',
-    headers: ['Date', 'Time', 'Location', 'Price', 'Event Name', 'Description', 'Link', 'Poster', 'Type']
+    headers: ['Date', 'Time', 'Location', 'Price', 'Event Name', 'Description', 'Link', 'Volunteer Link', 'Poster', 'Type']
   },
   past: {
     name: 'Past events',
@@ -60,18 +62,16 @@ const TABS = {
   },
   gallery: {
     name: 'Gallery',
-    headers: ['Image', 'Event Name', 'Description', 'Label', 'Persons', 'Project Ref']
+    headers: ['Image', 'Event Name', 'Description', 'Label', 'Homepage Header', 'Project Ref']
   },
   committee: {
     name: 'Committee',
-    headers: ['Name', 'Username', 'Position', 'Image', 'Bio', 'Projects', 'Featured', 'Show']
+    headers: ['Name', 'Position', 'Image', 'Appointments', 'Show']
   }
 };
-const CHECKBOX_HEADERS = ['show'];
+const CHECKBOX_HEADERS = ['show', 'homepage header'];
 const CACHE_SECONDS = 300; // sheet edits show on the site within 5 minutes
-const CACHE_KEY = 'site_v6'; // change this to clear the cache after editing the script
-const MAX_FEATURED = 2;
-const MAX_MEMBER_PHOTOS = 10;
+const CACHE_KEY = 'site_v7'; // change this to clear the cache after editing the script
 
 const MONTHS_SHORT = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 const MONTHS_FULL = ['january', 'february', 'march', 'april', 'may', 'june', 'july',
@@ -79,9 +79,8 @@ const MONTHS_FULL = ['january', 'february', 'march', 'april', 'may', 'june', 'ju
 
 function doGet(e) {
   const params = (e && e.parameter) || {};
-  const type = ['past', 'gallery', 'committee', 'member'].indexOf(params.type) !== -1 ? params.type : 'upcoming';
-  const username = type === 'member' ? slug_(params.name) : '';
-  const cacheKey = CACHE_KEY + '_' + type + (username ? '_' + username : '');
+  const type = ['past', 'gallery', 'committee'].indexOf(params.type) !== -1 ? params.type : 'upcoming';
+  const cacheKey = CACHE_KEY + '_' + type;
   let body;
   try {
     const cache = CacheService.getScriptCache();
@@ -93,7 +92,6 @@ function doGet(e) {
       if (type === 'past') data = { events: getPastEvents_() };
       else if (type === 'gallery') data = { photos: getGallery_() };
       else if (type === 'committee') data = { members: getCommittee_() };
-      else if (type === 'member') data = { member: getMember_(username) }; // null = not found / hidden
       else data = { events: getUpcomingEvents_() };
       data.updated = new Date().toISOString();
       body = JSON.stringify(data);
@@ -156,7 +154,8 @@ function ensureSheets_() {
 /**
  * Reads a tab and returns helpers for each data row:
  *   text(key)  → the cell as displayed
- *   list(key)  → a comma-separated cell as an array of tidied refs / usernames
+ *   items(key) → a comma-separated cell as an array of trimmed items
+ *   ticked(key) → whether a checkbox cell is ticked
  *   link(key)  → a usable URL from the cell (see findLink_)
  *   image(key) → a URL that can go straight into <img src> (see findImage_)
  * `columns` maps our keys to header names (lower case).
@@ -184,7 +183,10 @@ function readTab_(tabName, columns) {
     const text = function (key) { return has(key) ? String(row[idx[key]] || '').trim() : ''; };
     return {
       text: text,
-      list: function (key) { return text(key).split(',').map(slug_).filter(Boolean); },
+      items: function (key) {
+        return text(key).split(',').map(function (item) { return item.trim(); }).filter(Boolean);
+      },
+      ticked: function (key) { return ['true', 'yes'].indexOf(text(key).toLowerCase()) !== -1; },
       link: function (key) {
         return has(key) ? findLink_(row[idx[key]], richText[r][idx[key]], formulas[r][idx[key]]) : '';
       },
@@ -195,7 +197,7 @@ function readTab_(tabName, columns) {
   });
 }
 
-/** Tidies a username or ref for matching: "  Jane Tan " → "jane-tan". */
+/** Tidies a ref for matching and for use in links: "  2026 HLW " → "2026-hlw". */
 function slug_(value) {
   return String(value || '').trim().toLowerCase().replace(/\s+/g, '-');
 }
@@ -218,6 +220,7 @@ function getUpcomingEvents_() {
     name: 'event name',
     description: 'description',
     link: 'link',
+    volunteerLink: 'volunteer link',
     poster: 'poster',
     type: 'type'
   });
@@ -244,6 +247,7 @@ function getUpcomingEvents_() {
       name: name,
       description: row.text('description'),
       link: row.link('link'),
+      volunteerLink: row.link('volunteerLink'),
       poster: row.image('poster'),
       type: row.text('type')
     });
@@ -281,23 +285,17 @@ function getPastEvents_() {
   return events.reverse();
 }
 
-/** Past events by Project Ref. If a ref repeats, the bottom row wins. */
-function pastEventsByRef_() {
-  const byRef = {};
-  getPastEvents_().slice().reverse().forEach(function (ev) {
-    if (ev.projectRef) byRef[ev.projectRef] = ev;
-  });
-  return byRef;
-}
-
-/** Gallery rows with an image, newest first (bottom row first). `persons` is internal only. */
-function readGallery_() {
+/**
+ * Gallery rows with an image, newest first (bottom row first).
+ * `homepage` marks the photos for the home page slideshow.
+ */
+function getGallery_() {
   const rows = readTab_(TABS.gallery.name, {
     image: 'image',
     name: 'event name',
     description: 'description',
     label: 'label',
-    persons: 'persons',
+    homepage: 'homepage header',
     projectRef: 'project ref'
   });
   const photos = [];
@@ -309,101 +307,34 @@ function readGallery_() {
       name: row.text('name'),
       description: row.text('description'),
       label: row.text('label'),
-      projectRef: slug_(row.text('projectRef')),
-      persons: row.list('persons')
+      homepage: row.ticked('homepage'),
+      projectRef: slug_(row.text('projectRef'))
     });
   });
   return photos.reverse();
 }
 
-/** What /gallery shows — without Persons, so who is tagged isn't public. */
-function getGallery_() {
-  return readGallery_().map(function (p) {
-    return { image: p.image, name: p.name, description: p.description, label: p.label, projectRef: p.projectRef };
-  });
-}
-
-/** Committee rows with Name and Username, Show ticked, one row per username (first wins). */
-function readCommittee_() {
+/** The /committee grid: rows with a Name and Show ticked, in sheet order. */
+function getCommittee_() {
   const rows = readTab_(TABS.committee.name, {
     name: 'name',
-    username: 'username',
     position: 'position',
     image: 'image',
-    bio: 'bio',
-    projects: 'projects',
-    featured: 'featured',
+    appointments: 'appointments',
     show: 'show'
   });
-  const seen = {};
   const members = [];
   rows.forEach(function (row) {
     const name = row.text('name');
-    const username = slug_(row.text('username'));
-    if (!name || !username || seen[username]) return;
-    seen[username] = true; // a later duplicate never replaces the first row, even if this one is hidden
-    if (['true', 'yes'].indexOf(row.text('show').toLowerCase()) === -1) return;
+    if (!name || !row.ticked('show')) return;
     members.push({
       name: name,
-      username: username,
       position: row.text('position'),
       image: row.image('image'),
-      bio: row.text('bio'),
-      projects: row.list('projects'),
-      featured: row.list('featured')
+      appointments: row.items('appointments')
     });
   });
   return members;
-}
-
-/** The /committee grid: shown members in sheet order. */
-function getCommittee_() {
-  return readCommittee_().map(function (m) {
-    return { name: m.name, username: m.username, position: m.position, image: m.image };
-  });
-}
-
-/** One shown member's profile, or null if the username is unknown or hidden. */
-function getMember_(username) {
-  if (!username) return null;
-  const member = readCommittee_().filter(function (m) { return m.username === username; })[0];
-  if (!member) return null;
-
-  const pastByRef = pastEventsByRef_();
-
-  const projectNames = {};
-  readTab_(TABS.projects.name, { ref: 'project ref', name: 'project name' }).forEach(function (row) {
-    const ref = slug_(row.text('ref'));
-    if (ref && !projectNames[ref]) projectNames[ref] = row.text('name');
-  });
-
-  const projects = member.projects.map(function (ref) {
-    return {
-      ref: ref,
-      name: projectNames[ref] || ref,
-      link: pastByRef[ref] ? '/events#' + ref : ''
-    };
-  });
-
-  const featured = member.featured.slice(0, MAX_FEATURED)
-    .map(function (ref) { return pastByRef[ref]; })
-    .filter(Boolean);
-
-  const photos = readGallery_()
-    .filter(function (p) { return p.persons.indexOf(username) !== -1; })
-    .slice(0, MAX_MEMBER_PHOTOS)
-    .map(function (p) { return { image: p.image, name: p.name, description: p.description, label: p.label }; });
-
-  return {
-    name: member.name,
-    username: member.username,
-    position: member.position,
-    image: member.image,
-    bio: member.bio,
-    projects: projects,
-    featured: featured,
-    photos: photos
-  };
 }
 
 /**

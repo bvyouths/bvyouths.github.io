@@ -3,19 +3,24 @@
 
      <div class="member-grid" data-committee></div>   (see partials/committee.html)
 
-   Only members with Show ticked are sent by code.gs. Each card links to
-   /member?name=<username>. No photo → a square with their initials.
+   Only members with Show ticked are sent by code.gs. Each card shows the photo
+   (or a square with their initials), name and position. If the Appointments
+   column is filled in, each comma-separated item shows as a bubble under the name.
    ========================================================== */
 (function () {
     var B = window.BVYN;
     var el = B.el;
 
     function buildCard(member) {
-        var card = el('a', 'member');
-        card.href = '/member?name=' + encodeURIComponent(member.username);
+        var card = el('article', 'member');
         card.appendChild(B.avatar(member, 'member-photo'));
         card.appendChild(el('h3', '', member.name));
-        if (member.position) card.appendChild(el('p', '', member.position));
+        if (member.position) card.appendChild(el('p', 'member-position', member.position));
+        if (member.appointments && member.appointments.length) {
+            var tags = el('div', 'member-tags');
+            member.appointments.forEach(function (item) { tags.appendChild(el('span', '', item)); });
+            card.appendChild(tags);
+        }
         return card;
     }
 
