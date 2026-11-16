@@ -21,7 +21,7 @@ This note is for whoever maintains the website next. It covers how the site is b
 | Testing access | While in testing, `bvyouths.com` and `www` are behind **Cloudflare Access** (Zero Trust → Access → Applications). Remove that application to launch publicly. |
 | Repository | https://github.com/bvyouths/bvyouths.github.io |
 | Tech | Plain HTML, CSS and JavaScript. No build step, framework or npm packages. |
-| Site data | One Google Sheet, published as JSON by a Google Apps Script web app (`code.gs`): events, past events, projects, gallery, committee |
+| Site data | One Google Sheet, published as JSON by a Google Apps Script web app (`code.gs`): events, past events, gallery, committee |
 | Working branch | `staging`. Changes go to `main` through a pull request. |
 
 ---
@@ -77,7 +77,6 @@ Defined as CSS variables at the top of `static/styles/styles.css`: `--purple #2c
 - **Internal links don't use `.html`:** `/about`, `/events`, `/collaborate`, and `/` for home. The `#join` and `#contact` sections are linked as `/collaborate#join` and `/collaborate#contact`. GitHub Pages maps `/about` to `about.html` automatically.
 - **Menu:** About us (▾ Committee) · Events · Gallery · Get involved. **Footer:** About us · Committee · Events · Gallery · Get involved. "Get involved" opens the Collaborate page (`/collaborate`), which includes the Join section.
 - **`noindex`:** `/gallery` and `/committee` ask Google not to list them (kept on request while the committee decides about going public).
-- **Past event addresses:** each past event with a Project Ref gets that ref as its id, so `/events#2026-hlw` scrolls to it (after the events load). Nothing on the site links this way at the moment.
 - `script.js` → `markCurrentPage()` highlights the current menu item. It treats `/events`, `/events.html` and `/events/` as the same page.
 - **Paths in `404.html` start with `/`** (`/static/...`, `/partials/...`) so it works at any depth.
 
@@ -100,13 +99,13 @@ https://script.google.com/macros/s/AKfycbyZ_Sp_VuXyBVqNtekwKcshiGuwXohG6PH-J7k9g
 | Request | Returns |
 |---|---|
 | `…/exec` | Upcoming events |
-| `…/exec?type=past` | Past events, newest first, with `projectRef` |
+| `…/exec?type=past` | Past events, newest first |
 | `…/exec?type=gallery` | Gallery photos, newest first; `homepage: true` marks the slideshow photos; `pages` lists pages that use the photo (e.g. `["/about"]`) |
 | `…/exec?type=committee` | Shown members only: name, position, image, appointments |
 | add `nocache=1` | Reads the sheet fresh and refreshes the cache (see below) |
 
 ### Sheet tabs and columns
-Row 1 must hold the headers. They can be in any order, and capitals and extra spaces are ignored. **If a tab or column is missing, the script creates it automatically** the next time it runs, or you can run `setUpSheets()` from the Apps Script editor. It never deletes data. Missing columns are added after the last existing one: as plain-text cells, except **Show** and **Homepage Header**, which get checkboxes.
+Row 1 must hold the headers. They can be in any order, and capitals and extra spaces are ignored. **The script never creates or changes tabs or columns** (decided after Review 3): add them in the sheet yourself. A missing column is treated as empty; a missing or renamed tab makes that part of the site show its "couldn't load" message. Format text columns such as Time and Price as **plain text** (Format → Number → Plain text) so Sheets doesn't convert entries like `6.30pm`; make **Show** and **Homepage Header** checkboxes (Insert → Checkbox).
 
 **`Upcoming events`**: `Date | Time | Location | Price | Event Name | Description | Link | Volunteer Link | Poster | Type`
 - **Time** and **Price** are plain text, shown exactly as typed on one line: `Time · Location · Price` (e.g. `6.30pm to 9.30pm · Leng Kee CC · $5/pax`).
@@ -117,20 +116,15 @@ Row 1 must hold the headers. They can be in any order, and capitals and extra sp
 - **Link** is the link to sign up to **take part** ("Sign up ↗" button). **Volunteer Link** is the link to sign up to **volunteer** ("Volunteer ↗" button). An event can have either, both or neither. Each can be a plain URL, a link behind text, `=HYPERLINK(...)`, or an email.
 - **Poster** is an image link (see Images below).
 
-**`Past events`**: `Hero Image | Event Name | Event Date | Event Type | Event Description | Project Ref`
+**`Past events`**: `Hero Image | Event Name | Event Date | Event Type | Event Description`
 - Only what's in this tab is shown. Upcoming events **do not** move here automatically once they pass (the committee picks a proper photo and write-up).
 - **Shown newest first = bottom row first.** Event Date is free text (e.g. `Quarterly`, `Mar – Jul 2026`), so it's **never used for sorting**. Add new past events at the bottom.
-- **Project Ref** (dropdown from `Projects`) is optional. It gives the event its own address (`/events#2026-hlw`). Kept for future use; refs should be unique.
 
-**`Projects`**: `Project Ref | Project Name`
-- The list of projects that the Project Ref dropdowns pull from. Project Ref: lower case, no spaces (e.g. `2026-hlw`). The website doesn't read this tab; it's kept for future use.
-
-**`Gallery`**: `Image | Event Name | Description | Label | Homepage Header | Page Photo | Project Ref`
+**`Gallery`**: `Image | Event Name | Description | Label | Homepage Header | Page Photo`
 - Rows without an image are skipped. Name, description and label are each optional (shown on hover/tap). Label is free text, e.g. the date.
 - **Shown newest first = bottom row first.** Add new photos at the bottom.
 - **Homepage Header** checkbox: ticked photos make up the **home page slideshow** (newest first, changing every 5 seconds). Landscape photos work best: the frame is 4:3 and crops to fill. If nothing is ticked, the home page keeps its built-in committee photo.
 - **Page Photo**: puts a photo on another page in place of its built-in photo. `/about` = the wide photo under "A network of passionate leaders" on About; `/collaborate` = the wide photo on Get involved. Comma-separate for both (`/about, /collaborate`). If several photos name the same page, the **newest (bottom row)** is used. The photo is cropped to the banner's wide shape (about 2.7:1 on About, 2.2:1 on Get involved), so wide landscape photos work best. If none is chosen, or the chosen one can't load, the built-in photo stays. Tip: make the column a dropdown (Data → Data validation → Dropdown, items `/about` and `/collaborate`, tick Allow multiple selections).
-- **Project Ref**: dropdown from `Projects`. Stored for future use; not displayed yet.
 
 **`Committee`**: `Name | Position | Image | Appointments | Show`
 - **Name** is required. List whoever should be displayed, in the order they should appear.
@@ -138,17 +132,7 @@ Row 1 must hold the headers. They can be in any order, and capitals and extra sp
 - **Image**: square photo link. Blank (or broken) → purple square with their initials.
 - **Appointments** (optional): comma-separated items, e.g. `Membership, BV Social`. Each shows as a small rounded bubble under the name. Leave blank for no bubbles (the current plan is to show the role only).
 
-**Columns the website no longer reads** (left over from the member profile pages, removed after Review 3): Committee `Username`, `Bio`, `Projects`, `Featured`; Gallery `Persons`. They're ignored and can be deleted from the sheet.
-
-### Setting up the dropdowns (one-off, in the Google Sheet)
-Select the column's cells (e.g. Past events → Project Ref, row 2 down) → **Data → Data validation → Add rule** → *Criteria: Dropdown (from a range)* → choose the range → Done.
-
-| Column | Range |
-|---|---|
-| Past events → Project Ref | `Projects!A2:A` (the Project Ref column) |
-| Gallery → Project Ref | `Projects!A2:A` |
-
-(Adjust the column letters if your columns are in a different order.)
+**Anything else in the sheet is ignored.** Old tabs and columns from removed features (the `Projects` tab; `Project Ref` in Past events and Gallery; Committee `Username`, `Bio`, `Projects`, `Featured`; Gallery `Persons`) are no longer read and can be deleted.
 
 ### Images
 - Paste a link to the image. Google Drive links (`drive.google.com/file/d/…/view`, `open?id=…`) are converted automatically. **The file must be shared as "Anyone with the link".** `=IMAGE("url")` and links behind text also work.
@@ -172,13 +156,13 @@ Select the column's cells (e.g. Past events → Project Ref, row 2 down) → **D
 ### Updating the Apps Script (important)
 `code.gs` in this repo is only a **copy**. The version that actually runs lives in the Google Sheet's Apps Script project (Extensions → Apps Script).
 1. Paste the updated `code.gs` into the Apps Script editor and save.
-2. Optional: run `setUpSheets` once (function dropdown → Run) to create new tabs and columns straight away.
+2. If the change uses a new column, add it to the sheet yourself (the script won't create it).
 3. **Deploy → Manage deployments → ✏️ Edit → Version: New version → Deploy.**
    This **keeps the same URL**. Choosing "New deployment" instead creates a new URL, and you would then need to update `API_URL` in `api.js`.
 4. Open the `?nocache=1` links to confirm the JSON looks right.
 
 ### Testing code.gs without the sheet
-`code.gs` has no external dependencies besides Google's services, so it can be run in Node with small stand-ins for `SpreadsheetApp`, `CacheService` etc. to check the JSON output (this was done for the Review 1 v2 and Review 3 changes).
+`code.gs` has no external dependencies besides Google's services, so it can be run in Node with small stand-ins for `SpreadsheetApp`, `CacheService` etc. to check the JSON output (this was done for the Review 1 v2 and Review 3 changes, and to confirm the script makes no changes to the sheet).
 
 ---
 
@@ -274,9 +258,9 @@ Then open http://localhost:4000. `serve` maps `/events` to `events.html` and sho
 | New sheet row doesn't appear | 5-minute cache. Open the matching `nocache=1` link. For upcoming events, also check the date isn't in the past. |
 | Image doesn't show | Check the link is on the right row and the Drive file is shared "Anyone with the link". Images inserted into cells don't work: use a link. Check there's no **second** empty column with the same header at the far right (the script adds one if it can't find the header). |
 | Member missing from /committee | Show isn't ticked, or Name is blank. |
-| Home page slideshow shows only the committee photo | No Gallery photo has Homepage Header ticked, the ticked photos' Drive files aren't shared, or the Apps Script hasn't been redeployed since the column was added. |
-| About / Get involved shows the built-in photo, not the chosen one | Page Photo isn't exactly `/about` / `/collaborate` (capitals and slashes don't matter), the Drive file isn't shared, or the Apps Script hasn't been redeployed since the column was added. |
-| No "Volunteer" button | Volunteer Link is empty or isn't a link, or the Apps Script hasn't been redeployed since the column was added. |
+| Home page slideshow shows only the committee photo | No Gallery photo has Homepage Header ticked, the ticked photos' Drive files aren't shared, or the column header in the sheet is spelt differently. |
+| About / Get involved shows the built-in photo, not the chosen one | Page Photo isn't exactly `/about` / `/collaborate` (capitals and slashes don't matter), the Drive file isn't shared, or the column header in the sheet is spelt differently. |
+| No "Volunteer" button | Volunteer Link is empty or isn't a link, or the column header in the sheet is spelt differently. |
 | Gallery shows an old list for a moment | The browser shows its remembered list first, then updates. The sheet's 5-minute cache also applies. |
 | "We couldn't load …" | The API returned an error or the URL is wrong. Open the `/exec` URL directly and read the `error` message in the JSON. Common causes: a tab renamed, a required header missing, or a new deployment URL not copied into `api.js`. |
 | Header/footer missing locally | The file was opened directly. Use `npx serve` (§8). |
@@ -310,7 +294,7 @@ Then open http://localhost:4000. `serve` maps `/events` to `events.html` and sho
 | Posters above the list on the Events page | Keeps a text list of every event, including ones without posters |
 | Past events come only from the `Past events` tab | The committee chooses the photo and write-up. Nothing moves automatically. |
 | 404 page uses root-relative paths | So it works at any URL depth |
-| Tabs and columns auto-created by `code.gs` | Setting up a fresh sheet needs no manual steps (except dropdowns) |
+| `code.gs` never creates tabs or columns | Decided after Review 3: the sheet's layout is managed by hand, and the script only reads it. Unused tabs/columns (Projects, Project Ref, profile columns) removed from the code. |
 | All work on `staging`, merged to `main` by PR | `main` is the live site |
 
 ---
@@ -319,7 +303,6 @@ Then open http://localhost:4000. `serve` maps `/events` to `events.html` and sho
 
 - Gallery may move onto `/events` later (drop in `partials/gallery.html`); committee may move onto `/about`.
 - **Committee page: office bearers only, or every member?** Still being discussed (Review 3). Points raised: members change more often than office bearers; people could opt out with the Show checkbox; first name plus appointment was suggested (e.g. "Fan Shuen, Chairperson"). Whatever is decided, just list those people in the Committee tab.
-- The Projects tab and the Project Ref columns are stored but not used by the site.
 - On tablets wider than 800px there's no hover, so the "About us" drop-down doesn't open by touch; Committee is still reachable from the About page and the footer.
 - If member profiles come back, the removed code is in git history before the Review 3 commit (`member.html`, `static/scripts/member.js`, the `member` request in `code.gs`).
 - The old `kenneth` branch can be deleted.

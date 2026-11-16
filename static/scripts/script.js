@@ -91,7 +91,7 @@ window.includesReady = loadIncludes().then(() => {
     setYear();
 
     // If the page was opened with a #section link, jump there now that the header is in place
-    // (getElementById, because ids such as "2026-hlw" aren't valid CSS selectors)
+    // (getElementById, because ids starting with a digit aren't valid CSS selectors)
     if (window.location.hash) {
         const target = document.getElementById(decodeURIComponent(window.location.hash.slice(1)));
         if (target) target.scrollIntoView({ behavior: 'instant' });

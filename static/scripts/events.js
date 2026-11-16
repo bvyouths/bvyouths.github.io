@@ -11,7 +11,6 @@
    Past events (from the "Past events" tab, newest first):
      <section data-past-section hidden> … <div class="past-list" data-past-events></div> </section>
      The data-past-section stays hidden unless there are past events to show.
-     Each past event with a Project Ref gets that ref as its id, so /events#2026-hlw scrolls to it.
 
    Events whose Type is "Volunteering Opportunity" get a tag on their card.
    Buttons: "Sign up" (the Link column) and "Volunteer" (the Volunteer Link column);
@@ -151,7 +150,6 @@
     }
 
     // ---------- Load upcoming events ----------
-    var upcomingDone = Promise.resolve(); // past events wait for this before jumping to a #project-ref
     if (lists.length || carousels.length) {
         // Loading placeholders
         lists.forEach(function (list) {
@@ -162,7 +160,7 @@
             if (carousel.hasAttribute('data-placeholder')) carousel.appendChild(el('div', 'skeleton'));
         });
 
-        upcomingDone = B.getJSON('')
+        B.getJSON('')
             .then(function (data) {
                 var all = data.events || [];
                 lists.forEach(function (list) {
@@ -215,15 +213,6 @@
                     var section = list.closest('[data-past-section]');
                     if (section) section.hidden = false;
                 });
-
-                // Arrived from a link to one past event (/events#2026-hlw): scroll there once it exists
-                // and the upcoming events above it have finished loading (so it doesn't move afterwards)
-                var target = window.location.hash && document.getElementById(decodeURIComponent(window.location.hash.slice(1)));
-                if (target) {
-                    Promise.all([upcomingDone, window.includesReady]).then(function () {
-                        setTimeout(function () { target.scrollIntoView({ behavior: 'instant', block: 'start' }); }, 50);
-                    });
-                }
             })
             .catch(function (err) {
                 console.error('Could not load past events:', err);

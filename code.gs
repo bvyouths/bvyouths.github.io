@@ -8,13 +8,15 @@
  *   .../exec?type=committee  → "Committee" (shown members only, for the /committee grid)
  *   add &nocache=1 (or ?nocache=1) to skip the 5-minute cache after editing the sheet
  *
- * Columns (row 1 headers, any order). Missing tabs / columns are created automatically
- * the first time the API runs — or run setUpSheets() from the editor to create them now.
+ * Columns (row 1 headers, any order; capitals and extra spaces don't matter).
+ * The script never creates or changes tabs or columns: add them in the sheet yourself.
+ * A missing column is simply treated as empty; a missing tab returns an error.
  *   Upcoming events: Date | Time | Location | Price | Event Name | Description | Link | Volunteer Link | Poster | Type
- *   Past events:     Hero Image | Event Name | Event Date | Event Type | Event Description | Project Ref
- *   Projects:        Project Ref | Project Name
- *   Gallery:         Image | Event Name | Description | Label | Homepage Header | Page Photo | Project Ref
+ *   Past events:     Hero Image | Event Name | Event Date | Event Type | Event Description
+ *   Gallery:         Image | Event Name | Description | Label | Homepage Header | Page Photo
  *   Committee:       Name | Position | Image | Appointments | Show
+ * Format text columns (e.g. Time, Price) as plain text so Sheets doesn't convert entries
+ * like "6.30pm" or "$5/pax". Show and Homepage Header are checkboxes (Insert → Checkbox).
  *
  * Upcoming events
  * - Past dates are hidden automatically (dates compared in the script's time zone).
@@ -34,47 +36,22 @@
  *   the sheet. List whoever should be displayed (e.g. office bearers only).
  * - Appointments is optional: comma-separated items (e.g. "Membership, BV Social"), each
  *   shown as a small bubble under the name. Leave blank for no bubbles.
- * Not used by the website (kept for possible future use; safe to leave or delete):
- * - The Projects tab and the Project Ref columns, apart from giving each past event an
- *   address like /events#2026-hlw.
- * - Committee: Username, Bio, Projects, Featured. Gallery: Persons. (These were for the
- *   member profile pages, removed after Website Review 3.)
  *
  * Line breaks typed in a cell (Ctrl/Cmd+Enter) are kept and shown as new lines on the site
  * for descriptions.
- *
- * New columns are formatted as plain text (Show and Homepage Header get checkboxes), so
- * entries like "6.30pm to 9.30pm" or "$5/pax" are shown exactly as typed.
  *
  * Images: paste an image link. Google Drive links work if the file is shared as
  * "Anyone with the link". Posters A4 portrait, hero images 4:3, committee photos square.
  */
 
 const TABS = {
-  upcoming: {
-    name: 'Upcoming events',
-    headers: ['Date', 'Time', 'Location', 'Price', 'Event Name', 'Description', 'Link', 'Volunteer Link', 'Poster', 'Type']
-  },
-  past: {
-    name: 'Past events',
-    headers: ['Hero Image', 'Event Name', 'Event Date', 'Event Type', 'Event Description', 'Project Ref']
-  },
-  projects: {
-    name: 'Projects',
-    headers: ['Project Ref', 'Project Name']
-  },
-  gallery: {
-    name: 'Gallery',
-    headers: ['Image', 'Event Name', 'Description', 'Label', 'Homepage Header', 'Page Photo', 'Project Ref']
-  },
-  committee: {
-    name: 'Committee',
-    headers: ['Name', 'Position', 'Image', 'Appointments', 'Show']
-  }
+  upcoming: { name: 'Upcoming events' },
+  past: { name: 'Past events' },
+  gallery: { name: 'Gallery' },
+  committee: { name: 'Committee' }
 };
-const CHECKBOX_HEADERS = ['show', 'homepage header'];
 const CACHE_SECONDS = 300; // sheet edits show on the site within 5 minutes
-const CACHE_KEY = 'site_v8'; // change this to clear the cache after editing the script
+const CACHE_KEY = 'site_v9'; // change this to clear the cache after editing the script
 
 const MONTHS_SHORT = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 const MONTHS_FULL = ['january', 'february', 'march', 'april', 'may', 'june', 'july',
@@ -90,7 +67,6 @@ function doGet(e) {
     body = params.nocache === '1' ? null : cache.get(cacheKey);
 
     if (!body) {
-      ensureSheets_();
       let data;
       if (type === 'past') data = { events: getPastEvents_() };
       else if (type === 'gallery') data = { photos: getGallery_() };
@@ -107,51 +83,6 @@ function doGet(e) {
   return ContentService
     .createTextOutput(body)
     .setMimeType(ContentService.MimeType.JSON);
-}
-
-/** Run this from the Apps Script editor to create the tabs and columns straight away. */
-function setUpSheets() {
-  ensureSheets_();
-}
-
-/**
- * Makes sure every tab exists with all its column headers.
- * Existing tabs keep their data; any missing headers are added after the last column.
- */
-function ensureSheets_() {
-  const lock = LockService.getScriptLock();
-  lock.waitLock(10000);
-  try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    Object.keys(TABS).forEach(function (key) {
-      const tab = TABS[key];
-      const sheet = ss.getSheetByName(tab.name) || ss.insertSheet(tab.name);
-      const lastCol = sheet.getLastColumn();
-      const existing = lastCol ? sheet.getRange(1, 1, 1, lastCol).getDisplayValues()[0] : [];
-      const have = existing.map(function (h) { return String(h).trim().toLowerCase(); });
-      const missing = tab.headers.filter(function (h) { return have.indexOf(h.toLowerCase()) === -1; });
-      if (!missing.length) return;
-
-      // Fill after the last non-empty header so blank trailing header cells aren't skipped over.
-      let start = have.length;
-      while (start > 0 && !have[start - 1]) start--;
-      sheet.getRange(1, start + 1, 1, missing.length).setValues([missing]).setFontWeight('bold');
-      if (sheet.getMaxRows() > 1) {
-        missing.forEach(function (header, i) {
-          const column = sheet.getRange(2, start + 1 + i, sheet.getMaxRows() - 1, 1);
-          if (CHECKBOX_HEADERS.indexOf(header.toLowerCase()) !== -1) {
-            column.setDataValidation(SpreadsheetApp.newDataValidation().requireCheckbox().build());
-          } else {
-            // Plain text, so times / prices / dates aren't auto-converted by Sheets
-            column.setNumberFormat('@');
-          }
-        });
-      }
-      sheet.setFrozenRows(1);
-    });
-  } finally {
-    lock.releaseLock();
-  }
 }
 
 /**
@@ -203,11 +134,6 @@ function readTab_(tabName, columns) {
 /** Tidies a page name: "About", "/about/", " /About " → "/about". */
 function pagePath_(value) {
   return '/' + String(value || '').trim().toLowerCase().replace(/^\/+|\/+$/g, '').replace(/\.html$/, '');
-}
-
-/** Tidies a ref for matching and for use in links: "  2026 HLW " → "2026-hlw". */
-function slug_(value) {
-  return String(value || '').trim().toLowerCase().replace(/\s+/g, '-');
 }
 
 function today_() {
@@ -272,8 +198,7 @@ function getPastEvents_() {
     name: 'event name',
     date: 'event date',
     type: 'event type',
-    description: 'event description',
-    projectRef: 'project ref'
+    description: 'event description'
   });
   const events = [];
 
@@ -285,8 +210,7 @@ function getPastEvents_() {
       type: row.text('type'),
       name: name,
       description: row.text('description'),
-      image: row.image('image'),
-      projectRef: slug_(row.text('projectRef'))
+      image: row.image('image')
     });
   });
 
@@ -305,8 +229,7 @@ function getGallery_() {
     description: 'description',
     label: 'label',
     homepage: 'homepage header',
-    pages: 'page photo',
-    projectRef: 'project ref'
+    pages: 'page photo'
   });
   const photos = [];
   rows.forEach(function (row) {
@@ -318,8 +241,7 @@ function getGallery_() {
       description: row.text('description'),
       label: row.text('label'),
       homepage: row.ticked('homepage'),
-      pages: row.items('pages').map(pagePath_),
-      projectRef: slug_(row.text('projectRef'))
+      pages: row.items('pages').map(pagePath_)
     });
   });
   return photos.reverse();

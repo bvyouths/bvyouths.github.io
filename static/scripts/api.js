@@ -118,7 +118,6 @@ window.BVYN = (function () {
     // One past event: image on one side, details on the other (sides alternate in CSS)
     function buildPast(ev) {
         var item = el('article', 'past-event');
-        if (ev.projectRef) item.id = ev.projectRef; // so /events#2026-hlw scrolls here
 
         var media = el('div', 'past-media');
         if (ev.image) {
