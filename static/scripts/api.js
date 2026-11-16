@@ -3,7 +3,7 @@
    (via the Apps Script web app in code.gs).
 
    Load after script.js and before events.js / gallery.js /
-   committee.js / slideshow.js:
+   committee.js / slideshow.js / page-photo.js:
      <script src="/static/scripts/api.js"></script>
    ========================================================== */
 window.BVYN = (function () {

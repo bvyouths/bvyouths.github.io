@@ -8,6 +8,11 @@
         <link rel="icon" type="image/png" href="static/images/favicon.png">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <!-- Start connecting early to where the sheet data and its photos come from -->
+        <link rel="preconnect" href="https://script.google.com">
+        <link rel="preconnect" href="https://script.googleusercontent.com">
+        <link rel="preconnect" href="https://drive.google.com">
+        <link rel="preconnect" href="https://lh3.googleusercontent.com">
         <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@700;800;900&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="static/styles/styles.css">
     </head>
@@ -31,7 +36,8 @@
                         <a class="text-link" href="/committee">Check out the faces behind BV YN <span>↗</span></a>
                     </div>
                 </div>
-                <figure class="photo-banner">
+                <!-- Replaced by the newest Gallery photo with "/about" in Page Photo (static/scripts/page-photo.js) -->
+                <figure class="photo-banner" data-page-photo="/about" style="--banner-ratio: 1600 / 586">
                     <img src="static/images/photos/committee-meeting.jpg" alt="Buona Vista Youth Network committee members at a committee meeting" width="1600" height="586" loading="lazy">
                 </figure>
                 <div class="stat-row">
@@ -95,5 +101,7 @@
         <!-- Footer: edit partials/footer.html -->
         <div class="include-footer" data-include="partials/footer.html"></div>
         <script src="static/scripts/script.js"></script>
+        <script src="static/scripts/api.js"></script>
+        <script src="static/scripts/page-photo.js"></script>
     </body>
 </html>

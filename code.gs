@@ -13,7 +13,7 @@
  *   Upcoming events: Date | Time | Location | Price | Event Name | Description | Link | Volunteer Link | Poster | Type
  *   Past events:     Hero Image | Event Name | Event Date | Event Type | Event Description | Project Ref
  *   Projects:        Project Ref | Project Name
- *   Gallery:         Image | Event Name | Description | Label | Homepage Header | Project Ref
+ *   Gallery:         Image | Event Name | Description | Label | Homepage Header | Page Photo | Project Ref
  *   Committee:       Name | Position | Image | Appointments | Show
  *
  * Upcoming events
@@ -26,6 +26,9 @@
  * - Shown newest first = bottom row first. Event Date is free text (e.g. "Quarterly",
  *   "Mar – Jul 2026"), so it is never used for sorting.
  * - Gallery photos with Homepage Header ticked make up the home page slideshow.
+ * - Page Photo puts a photo on another page: "/about" (the wide photo under "A network of
+ *   passionate leaders") or "/collaborate" (the wide photo on Get involved). Comma-separate
+ *   for both. If several photos name the same page, the newest (bottom row) is used.
  * Committee
  * - Only rows with the Show checkbox ticked appear. Hidden members' details never leave
  *   the sheet. List whoever should be displayed (e.g. office bearers only).
@@ -62,7 +65,7 @@ const TABS = {
   },
   gallery: {
     name: 'Gallery',
-    headers: ['Image', 'Event Name', 'Description', 'Label', 'Homepage Header', 'Project Ref']
+    headers: ['Image', 'Event Name', 'Description', 'Label', 'Homepage Header', 'Page Photo', 'Project Ref']
   },
   committee: {
     name: 'Committee',
@@ -71,7 +74,7 @@ const TABS = {
 };
 const CHECKBOX_HEADERS = ['show', 'homepage header'];
 const CACHE_SECONDS = 300; // sheet edits show on the site within 5 minutes
-const CACHE_KEY = 'site_v7'; // change this to clear the cache after editing the script
+const CACHE_KEY = 'site_v8'; // change this to clear the cache after editing the script
 
 const MONTHS_SHORT = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 const MONTHS_FULL = ['january', 'february', 'march', 'april', 'may', 'june', 'july',
@@ -197,6 +200,11 @@ function readTab_(tabName, columns) {
   });
 }
 
+/** Tidies a page name: "About", "/about/", " /About " → "/about". */
+function pagePath_(value) {
+  return '/' + String(value || '').trim().toLowerCase().replace(/^\/+|\/+$/g, '').replace(/\.html$/, '');
+}
+
 /** Tidies a ref for matching and for use in links: "  2026 HLW " → "2026-hlw". */
 function slug_(value) {
   return String(value || '').trim().toLowerCase().replace(/\s+/g, '-');
@@ -287,7 +295,8 @@ function getPastEvents_() {
 
 /**
  * Gallery rows with an image, newest first (bottom row first).
- * `homepage` marks the photos for the home page slideshow.
+ * `homepage` marks the photos for the home page slideshow; `pages` lists the pages
+ * (e.g. "/about") that use the photo in place of their built-in one.
  */
 function getGallery_() {
   const rows = readTab_(TABS.gallery.name, {
@@ -296,6 +305,7 @@ function getGallery_() {
     description: 'description',
     label: 'label',
     homepage: 'homepage header',
+    pages: 'page photo',
     projectRef: 'project ref'
   });
   const photos = [];
@@ -308,6 +318,7 @@ function getGallery_() {
       description: row.text('description'),
       label: row.text('label'),
       homepage: row.ticked('homepage'),
+      pages: row.items('pages').map(pagePath_),
       projectRef: slug_(row.text('projectRef'))
     });
   });

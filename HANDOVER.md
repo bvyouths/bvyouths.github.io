@@ -53,6 +53,7 @@ This note is for whoever maintains the website next. It covers how the site is b
 │   ├── scripts/gallery.js     Gallery masonry, hover details, enlarge on laptop, tap on phone
 │   ├── scripts/committee.js   Committee grid cards
 │   ├── scripts/slideshow.js   Home page slideshow (Gallery photos ticked "Homepage Header")
+│   ├── scripts/page-photo.js  About / Get involved banner photos chosen in the Gallery tab (Page Photo)
 │   └── images/                logo.png, favicon.png
 │       └── photos/            Photos used on Home, About and Collaborate
 ├── HANDOVER.md           This document
@@ -100,7 +101,7 @@ https://script.google.com/macros/s/AKfycbyZ_Sp_VuXyBVqNtekwKcshiGuwXohG6PH-J7k9g
 |---|---|
 | `…/exec` | Upcoming events |
 | `…/exec?type=past` | Past events, newest first, with `projectRef` |
-| `…/exec?type=gallery` | Gallery photos, newest first; `homepage: true` marks the slideshow photos |
+| `…/exec?type=gallery` | Gallery photos, newest first; `homepage: true` marks the slideshow photos; `pages` lists pages that use the photo (e.g. `["/about"]`) |
 | `…/exec?type=committee` | Shown members only: name, position, image, appointments |
 | add `nocache=1` | Reads the sheet fresh and refreshes the cache (see below) |
 
@@ -124,10 +125,11 @@ Row 1 must hold the headers. They can be in any order, and capitals and extra sp
 **`Projects`**: `Project Ref | Project Name`
 - The list of projects that the Project Ref dropdowns pull from. Project Ref: lower case, no spaces (e.g. `2026-hlw`). The website doesn't read this tab; it's kept for future use.
 
-**`Gallery`**: `Image | Event Name | Description | Label | Homepage Header | Project Ref`
+**`Gallery`**: `Image | Event Name | Description | Label | Homepage Header | Page Photo | Project Ref`
 - Rows without an image are skipped. Name, description and label are each optional (shown on hover/tap). Label is free text, e.g. the date.
 - **Shown newest first = bottom row first.** Add new photos at the bottom.
 - **Homepage Header** checkbox: ticked photos make up the **home page slideshow** (newest first, changing every 5 seconds). Landscape photos work best: the frame is 4:3 and crops to fill. If nothing is ticked, the home page keeps its built-in committee photo.
+- **Page Photo**: puts a photo on another page in place of its built-in photo. `/about` = the wide photo under "A network of passionate leaders" on About; `/collaborate` = the wide photo on Get involved. Comma-separate for both (`/about, /collaborate`). If several photos name the same page, the **newest (bottom row)** is used. The photo is cropped to the banner's wide shape (about 2.7:1 on About, 2.2:1 on Get involved), so wide landscape photos work best. If none is chosen, or the chosen one can't load, the built-in photo stays. Tip: make the column a dropdown (Data → Data validation → Dropdown, items `/about` and `/collaborate`, tick Allow multiple selections).
 - **Project Ref**: dropdown from `Projects`. Stored for future use; not displayed yet.
 
 **`Committee`**: `Name | Position | Image | Appointments | Show`
@@ -164,7 +166,7 @@ Select the column's cells (e.g. Past events → Project Ref, row 2 down) → **D
   - Past: `…/exec?type=past&nocache=1`
   - Gallery: `…/exec?type=gallery&nocache=1`
   - Committee grid: `…/exec?type=committee&nocache=1`
-- After changing `code.gs` itself, bump `CACHE_KEY` (currently `site_v7`; e.g. → `site_v8`) so old cached data is dropped.
+- After changing `code.gs` itself, bump `CACHE_KEY` (currently `site_v8`; e.g. → `site_v9`) so old cached data is dropped.
 - **The browser also remembers the gallery list** (`localStorage`, key `bvyn:type=gallery`), so the gallery and slideshow appear straight away on repeat visits and then update if the sheet has changed. A visitor may briefly see the previous list before it refreshes.
 
 ### Updating the Apps Script (important)
@@ -251,13 +253,14 @@ Then open http://localhost:4000. `serve` maps `/events` to `events.html` and sho
 | Add a past event | `Past events` (at the **bottom**) |
 | Add a gallery photo | `Gallery` (at the **bottom**) |
 | Change the home page slideshow | `Gallery` → tick or untick Homepage Header |
+| Change the photo on About or Get involved | `Gallery` → put `/about` or `/collaborate` in that photo's Page Photo cell |
 | Add / edit / hide a committee member | `Committee`. Tick Show to make them visible. |
 | Show appointment bubbles on a committee card | `Committee` → Appointments, comma-separated |
 | Change nav or footer links | `partials/header.html`, `partials/footer.html` |
 | Change colours / fonts / spacing | `static/styles/styles.css` (variables at the top); for fonts also the Google Fonts line in each page's `<head>` |
 | Change the interest / sign-up form link | `collaborate.html` (`#join` section), currently `go.gov.sg/bvyn-interest-form` |
 | Change contact email / socials | `collaborate.html` (`#contact`) and `partials/footer.html` |
-| Change a site photo | Replace the file in `static/images/photos/` (same name), or change the `<img src>` in the page. Keep files under ~300 KB (about 1600 px wide). |
+| Change a built-in site photo (the fallback) | Replace the file in `static/images/photos/` (same name), or change the `<img src>` in the page. Keep files under ~300 KB (about 1600 px wide). |
 | Change the favicon | Replace `static/images/favicon.png` (square PNG, currently 256×256, logo on white) |
 | Change cache time | `CACHE_SECONDS` in `code.gs`, then redeploy (see §4) |
 | Change the API URL | `API_URL` in `static/scripts/api.js` |
@@ -272,6 +275,7 @@ Then open http://localhost:4000. `serve` maps `/events` to `events.html` and sho
 | Image doesn't show | Check the link is on the right row and the Drive file is shared "Anyone with the link". Images inserted into cells don't work: use a link. Check there's no **second** empty column with the same header at the far right (the script adds one if it can't find the header). |
 | Member missing from /committee | Show isn't ticked, or Name is blank. |
 | Home page slideshow shows only the committee photo | No Gallery photo has Homepage Header ticked, the ticked photos' Drive files aren't shared, or the Apps Script hasn't been redeployed since the column was added. |
+| About / Get involved shows the built-in photo, not the chosen one | Page Photo isn't exactly `/about` / `/collaborate` (capitals and slashes don't matter), the Drive file isn't shared, or the Apps Script hasn't been redeployed since the column was added. |
 | No "Volunteer" button | Volunteer Link is empty or isn't a link, or the Apps Script hasn't been redeployed since the column was added. |
 | Gallery shows an old list for a moment | The browser shows its remembered list first, then updates. The sheet's 5-minute cache also applies. |
 | "We couldn't load …" | The API returned an error or the URL is wrong. Open the `/exec` URL directly and read the `error` message in the JSON. Common causes: a tab renamed, a required header missing, or a new deployment URL not copied into `api.js`. |
@@ -295,6 +299,7 @@ Then open http://localhost:4000. `serve` maps `/events` to `events.html` and sho
 | Home page slideshow from the Gallery tab (Homepage Header checkbox) | Review 3: a rolling slideshow instead of one committee selfie. |
 | Two buttons per event: Sign up, Volunteer | Review 3: some events take participants, some volunteers, some both. |
 | Fonts: Roboto headings, Montserrat text | Review 3 (Caleb). DM Mono kept for small labels. |
+| About and Get involved photos chosen from the Gallery tab (Page Photo) | Requested after Review 3. Newest wins; cropped to the banner shape; built-in photo as fallback. |
 | Gallery kept; smaller images and a remembered list | Review 3: "must-have, but can the photos appear faster?" |
 | Home sections 02 and 03 kept separate; 03 renamed "Throwback" | Review 3. No Instagram feed on the Events page (home page is enough). |
 | Upcoming events: Time and Price; Type only drives the volunteering tag | Requested (Review 1, Review 1 v2) |
