@@ -5,6 +5,9 @@
          <div class="hero-frame"><img class="slide is-active" src="…fallback photo…"></div>
      </figure>
 
+   Also downloads the first few Gallery photos in the background once the home page
+   has loaded, so the Gallery page opens with them ready (BVYN.prefetchGallery).
+
    Shows the Gallery photos ticked "Homepage Header" in the sheet, newest first,
    changing every few seconds. The photo already in the page shows while they load,
    and stays if nothing is ticked or the sheet can't be reached.
@@ -64,7 +67,11 @@
         if (!still) timer = setInterval(next, INTERVAL);
     }
 
-    B.cachedJSON('type=gallery', function (data) { start(data.photos || []); }, function (err) {
+    var prefetched = false;
+    B.cachedJSON('type=gallery', function (data) {
+        start(data.photos || []);
+        if (!prefetched) { prefetched = true; B.prefetchGallery(data.photos || []); }
+    }, function (err) {
         console.error('Could not load the slideshow photos:', err);
     });
 })();

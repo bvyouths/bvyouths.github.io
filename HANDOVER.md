@@ -186,7 +186,8 @@ The **homepage** (`index.html`) shows the same poster cards (no list). Remove `d
 ### Gallery (`/gallery`)
 - Masonry: 3 columns on laptop, 2 on tablet, 1 on phone. Photos keep their own shape and are dealt left to right, so the newest are along the top.
 - Laptop: hover shows label, name and description; **click enlarges** (Esc or click to close). Phone/tablet: **tap** shows the details.
-- To appear quickly: small copies in the grid, the first 6 load immediately (`EAGER` in `gallery.js`), and the last list is remembered in the browser.
+- To appear quickly: small copies in the grid (800 px), the first 6 load immediately, and the last list is remembered in the browser. Both numbers are `GALLERY` in `api.js`.
+- **The home page warms up the gallery:** the slideshow fetches the gallery list (refreshing the sheet cache and the browser's remembered list), and once the home page has loaded and the browser is idle it downloads the first 6 grid photos in the background (`BVYN.prefetchGallery`). The Gallery page then opens with them ready. Costs about 1 MB for visitors who never open the Gallery; skipped for visitors with data saver on or a 2G connection.
 
 ### Committee (`/committee`)
 - Grid of shown members (4 / 3 / 2 per row): photo or initials, name, position, and appointment bubbles if that column is filled in. Cards aren't links.

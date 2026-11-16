@@ -59,8 +59,8 @@
     }
 
     // ---------- One photo ----------
-    var GRID_WIDTH = 800;  // px asked for in the grid (columns are about 370px wide, doubled for sharp screens)
-    var EAGER = 6;         // the first photos load immediately; the rest as they scroll into view
+    var GRID_WIDTH = B.GALLERY.width;  // set in api.js, shared with the home page's prefetch
+    var EAGER = B.GALLERY.eager;
 
     function buildItem(photo, index) {
         var item = el('figure', 'gallery-item');

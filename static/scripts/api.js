@@ -65,6 +65,33 @@ window.BVYN = (function () {
         return String(url || '').replace(/([?&]sz=w)\d+/, '$1' + width);
     }
 
+    // Gallery grid settings, shared with the home page's prefetch so the browser can reuse the files
+    var GALLERY = {
+        width: 800,  // px asked for in the grid (columns are about 370px wide, doubled for sharp screens)
+        eager: 6     // the first photos load immediately; the rest as they scroll into view
+    };
+
+    // Downloads the first few gallery grid photos in the background, once the current page has
+    // finished loading and the browser is idle, so the Gallery page can show them straight away.
+    // Skipped when the visitor has asked to save data or is on a very slow connection.
+    function prefetchGallery(photos) {
+        var c = navigator.connection || {};
+        if (c.saveData || /(^|-)2g$/.test(c.effectiveType || '')) return;
+        function go() {
+            photos.slice(0, GALLERY.eager).forEach(function (photo) {
+                var img = new Image();
+                img.decoding = 'async';
+                img.src = sized(photo.image, GALLERY.width);
+            });
+        }
+        function whenIdle() {
+            if (window.requestIdleCallback) window.requestIdleCallback(go, { timeout: 4000 });
+            else setTimeout(go, 1500);
+        }
+        if (document.readyState === 'complete') whenIdle();
+        else window.addEventListener('load', whenIdle, { once: true });
+    }
+
     // Turns whatever is in a Link column into a proper URL
     function cleanLink(value) {
         var url = String(value || '').trim();
@@ -212,6 +239,8 @@ window.BVYN = (function () {
         getJSON: getJSON,
         cachedJSON: cachedJSON,
         sized: sized,
+        GALLERY: GALLERY,
+        prefetchGallery: prefetchGallery,
         cleanLink: cleanLink,
         openInNewTab: openInNewTab,
         initials: initials,
