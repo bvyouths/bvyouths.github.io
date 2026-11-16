@@ -156,26 +156,35 @@ function ensureSheets_() {
  *   link(key)  → a usable URL from the cell (see findLink_)
  *   image(key) → a URL that can go straight into <img src> (see findImage_)
  * `columns` maps our keys to header names (lower case).
+ *
+ * Speed: the slow part of reading a sheet is the link details (rich text and formulas).
+ * Those are fetched only for the columns that link() / image() are actually used on
+ * (e.g. Image, Poster, Link), once per column, instead of for every cell in the tab.
  */
 function readTab_(tabName, columns) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(tabName);
   if (!sheet) throw new Error('Tab "' + tabName + '" not found');
 
   // Display values = exactly what you see in the cells, all as text.
-  const range = sheet.getDataRange();
-  const values = range.getDisplayValues();
+  const values = sheet.getDataRange().getDisplayValues();
   if (values.length < 2) return [];
 
-  // Used to find links hidden behind cell text (Insert link / =HYPERLINK / =IMAGE).
-  const richText = range.getRichTextValues();
-  const formulas = range.getFormulas();
+  // Links hidden behind cell text (Insert link / =HYPERLINK / =IMAGE), one column at a time
+  const linkColumns = {};
+  function linkDetails(col) {
+    if (!linkColumns[col]) {
+      const range = sheet.getRange(1, col + 1, values.length, 1);
+      linkColumns[col] = { richText: range.getRichTextValues(), formulas: range.getFormulas() };
+    }
+    return linkColumns[col];
+  }
 
   const headers = values[0].map(function (h) { return String(h).trim().toLowerCase(); });
   const idx = {};
   Object.keys(columns).forEach(function (key) { idx[key] = headers.indexOf(columns[key]); });
 
   return values.slice(1).map(function (row, i) {
-    const r = i + 1; // position in values / richText / formulas
+    const r = i + 1; // row position in values and in the link details
     const has = function (key) { return idx[key] !== undefined && idx[key] !== -1; };
     const text = function (key) { return has(key) ? String(row[idx[key]] || '').trim() : ''; };
     return {
@@ -185,10 +194,14 @@ function readTab_(tabName, columns) {
       },
       ticked: function (key) { return ['true', 'yes'].indexOf(text(key).toLowerCase()) !== -1; },
       link: function (key) {
-        return has(key) ? findLink_(row[idx[key]], richText[r][idx[key]], formulas[r][idx[key]]) : '';
+        if (!has(key)) return '';
+        const d = linkDetails(idx[key]);
+        return findLink_(row[idx[key]], d.richText[r][0], d.formulas[r][0]);
       },
       image: function (key) {
-        return has(key) ? findImage_(row[idx[key]], richText[r][idx[key]], formulas[r][idx[key]]) : '';
+        if (!has(key)) return '';
+        const d = linkDetails(idx[key]);
+        return findImage_(row[idx[key]], d.richText[r][0], d.formulas[r][0]);
       }
     };
   });

@@ -144,6 +144,7 @@ Row 1 must hold the headers. They can be in any order, and capitals and extra sp
 - **Sizes are requested automatically.** For Google Drive links the site asks for a copy close to the size shown (gallery grid 800 px, posters 900 px, committee 600 px, slideshow and past events 1200 px; the full 1600 px only when a gallery photo is enlarged). This is `BVYN.sized()` in `api.js` and is the main reason pages load quickly. Other image links are used as they are, so keep those files reasonably small.
 
 ### Caching (why sheet edits don't show instantly)
+- **Reading the sheet is the slow step** (it was ~9 s for the gallery when the cache had expired). `readTab_()` in `code.gs` fetches link details (rich text, formulas) only for the columns that hold links or images, once per column, rather than for every cell. Keep it that way when adding columns.
 - The script caches each response for **5 minutes** (`CACHE_SECONDS` in `code.gs`). Each request type is cached separately.
 - To show changes immediately, add `nocache=1` to the matching request, e.g.:
   - Upcoming: `…/exec?nocache=1`
