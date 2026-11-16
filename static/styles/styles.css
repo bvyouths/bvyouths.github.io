@@ -149,7 +149,7 @@ h1, h2, h3 { font-weight: 800; }
 h2 {
   font-size: clamp(40px, 6vw, 76px);
   line-height: .98;
-  letter-spacing: -.06em;
+  letter-spacing: -.03em;   /* Roboto's lowercase gets cramped any tighter */
   margin: 45px 0;
 }
 h2 em, h1 em { font-style: normal; color: var(--orange); }
@@ -499,7 +499,7 @@ h2 em, h1 em { font-style: normal; color: var(--orange); }
 .page-hero h1 {
   font-size: clamp(52px, 7.5vw, 110px);
   line-height: .94;
-  letter-spacing: -.07em;
+  letter-spacing: -.03em;   /* Roboto's lowercase gets cramped any tighter */
   margin: 26px 0;
   max-width: 900px;
 }
