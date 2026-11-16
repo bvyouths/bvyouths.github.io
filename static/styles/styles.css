@@ -531,7 +531,7 @@ h2 em, h1 em { font-style: normal; color: var(--orange); }
 .photo-banner { margin: 60px 0 0; }
 .photo-banner img { width: 100%; height: auto; border-radius: 22px; object-fit: cover; }
 /* Banners that a Gallery photo can replace keep a fixed wide shape; other shapes are cropped to fill */
-.photo-banner[data-page-photo] img { aspect-ratio: var(--banner-ratio, 16 / 7); }
+.photo-banner[data-page-photo] img { aspect-ratio: var(--banner-ratio, 21 / 9); }
 .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 60px; }
 .stat {
   background: var(--purple);
